@@ -5,27 +5,2498 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LabTrace — Explainable Access Alerts</title>
 <style>
-/* LabTrace full stylesheet and app are large (~112KB).
-   Please upload the complete labtrace.html from the hackathon delivery package.
-   This stub will be replaced when the full file is pushed. */
-body{font-family:system-ui,sans-serif;max-width:640px;margin:3rem auto;padding:1rem;line-height:1.5}
-code{background:#f0f0f0;padding:.1rem .3rem;border-radius:4px}
+:root {
+  --navy: #050B14; --navy-2: #0A1628; --bg: #070E1A; --card: #0D1829;
+  --teal: #00E5C3; --teal-d: #00C4A7; --priority: #FF3B5C; --review: #FFB020;
+  --routine: #3DFF8A; --investigate: #5B8CFF; --text: #E8F0FF; --muted: #7A8BA8;
+  --border: #1A2D4A; --shadow: 0 0 0 1px rgba(0,229,195,.08), 0 8px 32px rgba(0,0,0,.45);
+  --radius: 10px; --focus: 0 0 0 3px rgba(0,229,195,.35); --sidebar-w: 220px;
+  --glow: 0 0 20px rgba(0,229,195,.15);
+}
+[data-theme="dark"] {
+  --bg: #0F172A; --card: #1E293B; --text: #F1F5F9; --muted: #94A3B8;
+  --border: #334155; --shadow: 0 1px 3px rgba(0,0,0,.3), 0 4px 12px rgba(0,0,0,.2);
+  --navy-2: #1a3358;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body { font-family: "Segoe UI", Inter, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; min-height: 100vh;
+  background-image:
+    linear-gradient(rgba(0,229,195,.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,229,195,.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.sb-logo, .login-brand .logo, .card-num, .badge, code { font-family: ui-monospace, "Cascadia Code", "Consolas", monospace; }
+.card { border: 1px solid var(--border); }
+.card:hover { box-shadow: var(--glow); border-color: rgba(0,229,195,.35); }
+.sidebar { border-right: 1px solid var(--border); }
+.topbar { backdrop-filter: blur(8px); background: rgba(13,24,41,.92); }
+.login-brand { background: linear-gradient(160deg, #050B14 0%, #0A1A2E 50%, #062018 100%); }
+.nav-item.active { box-shadow: inset 3px 0 12px rgba(0,229,195,.15); }
+.btn { letter-spacing: .02em; text-transform: uppercase; font-size: .75rem; }
+.login-btn { text-transform: uppercase; letter-spacing: .06em; box-shadow: 0 0 24px rgba(0,229,195,.25); }
+button, input, select, textarea { font-family: inherit; }
+:focus-visible { outline: none; box-shadow: var(--focus); }
+.hidden { display: none !important; }
+
+/* ===== LOGIN ===== */
+#loginPage { min-height: 100vh; display: flex; }
+.login-brand {
+  flex: 1; background: var(--navy); color: #fff; padding: 3rem; display: flex; flex-direction: column; justify-content: center;
+}
+.login-brand .logo { font-size: 2.2rem; font-weight: 700; margin-bottom: .5rem; }
+.login-brand .tag { opacity: .85; margin-bottom: 2rem; max-width: 320px; }
+.login-brand ul { list-style: none; }
+.login-brand li { margin-bottom: 1rem; padding-left: 1.5rem; position: relative; font-size: .95rem; opacity: .9; }
+.login-brand li::before { content: "✓"; position: absolute; left: 0; color: var(--teal); font-weight: 700; }
+.login-form-wrap {
+  width: 440px; max-width: 100%; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 2rem;
+}
+.login-card {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 2rem; width: 100%; max-width: 360px;
+}
+.login-card h1 { font-size: 1.4rem; margin-bottom: .25rem; }
+.login-card .sub { color: var(--muted); font-size: .85rem; margin-bottom: 1.5rem; }
+.field { margin-bottom: 1rem; }
+.field label { display: block; font-size: .8rem; font-weight: 500; color: var(--muted); margin-bottom: .3rem; }
+.field input {
+  width: 100%; padding: .6rem .75rem; border: 1px solid var(--border); border-radius: 8px;
+  background: var(--bg); color: var(--text); font-size: .95rem;
+}
+.pw-wrap { position: relative; }
+.pw-wrap button {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; cursor: pointer; color: var(--muted); font-size: .85rem;
+}
+.login-err { color: var(--priority); font-size: .85rem; min-height: 1.3em; margin-bottom: .5rem; }
+.login-btn {
+  width: 100%; padding: .7rem; background: var(--teal); color: #fff; border: none;
+  border-radius: 8px; font-weight: 600; font-size: 1rem; cursor: pointer;
+}
+.login-btn:hover { background: var(--teal-d); }
+.demo-box {
+  margin-top: 1.25rem; padding: 1rem; background: var(--bg); border-radius: 8px; font-size: .8rem;
+}
+.demo-box strong { display: block; margin-bottom: .35rem; }
+.demo-box code { background: var(--card); padding: .1rem .35rem; border-radius: 4px; }
+.demo-note { font-size: .75rem; color: var(--muted); margin-top: 1rem; text-align: center; }
+@media (max-width: 800px) {
+  #loginPage { flex-direction: column; }
+  .login-brand { padding: 1.5rem; }
+  .login-form-wrap { width: 100%; }
+}
+
+/* ===== APP SHELL ===== */
+#appShell { display: none; min-height: 100vh; }
+#appShell.active { display: flex; }
+.sidebar {
+  width: var(--sidebar-w); background: var(--navy); color: #fff; display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0; z-index: 50; transition: width .2s;
+}
+.sidebar .sb-logo { padding: 1.25rem 1rem; font-size: 1.35rem; font-weight: 700; }
+.sidebar .sb-tag { padding: 0 1rem .75rem; font-size: .7rem; opacity: .7; }
+.nav-item {
+  display: flex; align-items: center; gap: .75rem; padding: .7rem 1rem; cursor: pointer;
+  border: none; background: none; color: rgba(255,255,255,.75); font-size: .9rem; width: 100%; text-align: left;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover { background: rgba(255,255,255,.08); color: #fff; }
+.nav-item.active { background: rgba(15,163,163,.2); color: #fff; border-left-color: var(--teal); }
+.nav-item .ico { font-size: 1.1rem; width: 1.4rem; text-align: center; }
+.main-area { margin-left: var(--sidebar-w); flex: 1; display: flex; flex-direction: column; min-height: 100vh; }
+.topbar {
+  background: var(--card); border-bottom: 1px solid var(--border); padding: .75rem 1.25rem;
+  display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; position: sticky; top: 0; z-index: 40;
+}
+.topbar h1 { font-size: 1.15rem; font-weight: 600; margin-right: auto; }
+.data-chip {
+  font-size: .75rem; padding: .25rem .6rem; border-radius: 999px; background: var(--bg); color: var(--muted);
+}
+.btn {
+  background: var(--teal); color: #fff; border: none; padding: .45rem .85rem; border-radius: 8px;
+  font-size: .8rem; font-weight: 600; cursor: pointer;
+}
+.btn:hover { background: var(--teal-d); }
+.btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); }
+.btn-sm { padding: .3rem .6rem; font-size: .75rem; }
+.btn-danger { background: var(--priority); }
+.btn-danger:hover { background: #a01f1f; }
+.user-chip {
+  display: flex; align-items: center; gap: .4rem; font-size: .8rem; padding: .3rem .6rem;
+  background: var(--bg); border-radius: 999px;
+}
+.role-badge { font-size: .65rem; background: var(--teal); color: #fff; padding: .1rem .4rem; border-radius: 4px; }
+.content { padding: 1.25rem; flex: 1; }
+.page { display: none; }
+.page.active { display: block; }
+
+/* Cards */
+.cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.card { background: var(--card); border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow); text-align: center; }
+.card-num { font-size: 1.75rem; font-weight: 700; line-height: 1.2; }
+.card-label { font-size: .75rem; color: var(--muted); margin-top: .2rem; }
+.card-icon { font-size: 1.1rem; margin-bottom: .15rem; }
+
+/* Dataset panel */
+.dataset-panel {
+  background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 1rem; margin-bottom: 1.25rem;
+}
+.dataset-panel h3 { font-size: .95rem; margin-bottom: .6rem; }
+.dataset-list { display: flex; flex-direction: column; gap: .4rem; max-height: 200px; overflow-y: auto; }
+.dataset-item {
+  display: flex; align-items: center; gap: .6rem; padding: .5rem .7rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg); cursor: pointer; font-size: .85rem;
+}
+.dataset-item.active { border-color: var(--teal); background: rgba(15,163,163,.1); }
+.dataset-item .ds-name { flex: 1; font-weight: 500; }
+.dataset-item .ds-meta { font-size: .72rem; color: var(--muted); }
+.dataset-actions { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .75rem; }
+
+/* Controls / settings drawer */
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.35); z-index: 90; display: none;
+}
+.drawer-overlay.open { display: block; }
+.settings-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 380px; max-width: 95vw;
+  background: var(--card); box-shadow: -4px 0 24px rgba(0,0,0,.15); z-index: 100;
+  transform: translateX(100%); transition: transform .25s; overflow-y: auto; padding: 1.25rem;
+}
+.settings-drawer.open { transform: translateX(0); }
+.settings-drawer h2 { font-size: 1.1rem; margin-bottom: 1rem; }
+.ctrl-group { margin-bottom: 1rem; }
+.ctrl-group label { font-size: .8rem; color: var(--muted); font-weight: 500; display: block; margin-bottom: .3rem; }
+.ctrl-group input[type="range"] { width: 100%; accent-color: var(--teal); }
+.ctrl-group input[type="time"], .ctrl-group input[type="number"] {
+  padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text);
+}
+.day-chips { display: flex; flex-wrap: wrap; gap: .4rem; }
+.day-chip {
+  padding: .35rem .65rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg);
+  cursor: pointer; font-size: .8rem; color: var(--muted);
+}
+.day-chip[aria-pressed="true"] { background: var(--teal); color: #fff; border-color: var(--teal); }
+.preset-btns { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: .5rem; }
+.hours-summary { font-size: .85rem; color: var(--teal); margin-top: .75rem; font-weight: 500; }
+.whatif { font-size: .85rem; color: var(--teal); font-weight: 500; min-height: 1.3em; margin-top: .5rem; }
+.warn-days { font-size: .8rem; color: var(--review); margin-top: .35rem; }
+
+/* Tabs / segmented */
+.tabs {
+  display: flex; gap: .25rem; margin-bottom: 1rem; flex-wrap: wrap;
+  background: var(--card); padding: .3rem; border-radius: 10px; box-shadow: var(--shadow); width: fit-content;
+}
+.tab {
+  padding: .45rem .9rem; border: none; background: transparent; border-radius: 8px;
+  font-size: .8rem; font-weight: 500; cursor: pointer; color: var(--muted);
+}
+.tab.active { background: var(--teal); color: #fff; }
+
+/* Table */
+.table-wrap { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); overflow: auto; max-height: 520px; }
+table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+th {
+  text-align: left; padding: .65rem .85rem; background: var(--bg); position: sticky; top: 0;
+  font-weight: 600; font-size: .7rem; text-transform: uppercase; letter-spacing: .03em; color: var(--muted);
+  border-bottom: 1px solid var(--border); cursor: pointer; user-select: none;
+}
+td { padding: .55rem .85rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+tr { cursor: pointer; transition: background .12s; }
+tr:hover { background: rgba(15,163,163,.06); }
+tr.selected { background: rgba(15,163,163,.12); }
+.badge {
+  display: inline-flex; align-items: center; gap: .25rem; padding: .15rem .5rem;
+  border-radius: 999px; font-size: .72rem; font-weight: 600;
+}
+.badge-priority { background: rgba(255,59,92,.15); color: var(--priority); }
+.badge-review { background: rgba(255,176,32,.15); color: var(--review); }
+.badge-routine { background: rgba(61,255,138,.12); color: var(--routine); }
+.badge-investigate { background: rgba(91,140,255,.15); color: var(--investigate); }
+[data-theme="dark"] .badge-priority { background: #4A1515; }
+[data-theme="dark"] .badge-review { background: #4A3A10; }
+[data-theme="dark"] .badge-routine { background: #1A3A1A; }
+[data-theme="dark"] .badge-investigate { background: #1A1F4A; }
+
+.badge-risk-critical { background: #FFEBEE; color: #B71C1C; }
+.badge-risk-high { background: #FFF3E0; color: #E65100; }
+.badge-risk-medium { background: #FFF8E1; color: #F9A825; }
+.badge-risk-low { background: #E8F5E9; color: #2E7D32; }
+[data-theme="dark"] .badge-risk-critical { background: #4A1515; color: #EF9A9A; }
+[data-theme="dark"] .badge-risk-high { background: #4A2C0A; color: #FFB74D; }
+[data-theme="dark"] .badge-risk-medium { background: #4A3A10; color: #FFE082; }
+[data-theme="dark"] .badge-risk-low { background: #1A3A1A; color: #A5D6A7; }
+.risk-meter { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: .4rem 0; }
+.risk-meter span { display: block; height: 100%; border-radius: 4px; }
+.risk-breakdown { font-size: .8rem; margin: .5rem 0; }
+.risk-breakdown li { padding: .15rem 0; }
+.ai-box { background: rgba(92,107,192,.08); border-left: 3px solid var(--investigate); padding: .65rem .9rem; margin: .6rem 0; font-size: .85rem; border-radius: 0 8px 8px 0; }
+.ai-box strong { display: block; margin-bottom: .25rem; }
+
+.muted-col { color: var(--muted); font-size: .78rem; }
+.status-chip { font-size: .68rem; padding: .12rem .4rem; border-radius: 4px; background: var(--bg); color: var(--muted); }
+.status-confirmed { background: #E3F2FD; color: #1565C0; }
+.status-dismissed { background: #F5F5F5; color: #757575; }
+[data-theme="dark"] .status-confirmed { background: #0D2A4A; color: #90CAF9; }
+[data-theme="dark"] .status-dismissed { background: #333; color: #aaa; }
+
+/* Evidence drawer */
+.ev-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 80; display: none; }
+.ev-overlay.open { display: block; }
+.ev-drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; width: 440px; max-width: 95vw;
+  background: var(--card); box-shadow: -4px 0 24px rgba(0,0,0,.12); z-index: 85;
+  transform: translateX(100%); transition: transform .25s; overflow-y: auto; padding: 1.25rem;
+}
+.ev-drawer.open { transform: translateX(0); }
+.timeline { position: relative; margin: 1rem 0 1.25rem; padding: 1.25rem 0 1.5rem; }
+.timeline-track { height: 4px; background: var(--border); border-radius: 2px; position: relative; }
+.timeline-window {
+  position: absolute; height: 22px; top: -9px; background: rgba(15,163,163,.15);
+  border: 1px dashed var(--teal); border-radius: 4px; pointer-events: none;
+}
+.timeline-dot {
+  position: absolute; width: 12px; height: 12px; border-radius: 50%; top: -4px;
+  transform: translateX(-50%); border: 2px solid var(--card);
+}
+.dot-fail { background: var(--priority); }
+.dot-success { background: var(--routine); }
+.timeline-labels { display: flex; justify-content: space-between; font-size: .68rem; color: var(--muted); margin-top: .4rem; }
+.hours-marker { font-size: .72rem; margin-top: .4rem; padding: .3rem .55rem; border-radius: 6px; display: inline-block; }
+.hours-in { background: #E8F5E9; color: var(--routine); }
+.hours-out { background: #FFEBEE; color: var(--priority); }
+[data-theme="dark"] .hours-in { background: #1A3A1A; }
+[data-theme="dark"] .hours-out { background: #4A1515; }
+.why-block { background: var(--bg); border-radius: 8px; padding: .65rem .9rem; margin: .6rem 0; font-size: .85rem; }
+.why-block strong { display: block; margin-bottom: .2rem; }
+.check-q {
+  background: rgba(15,163,163,.08); border-left: 3px solid var(--teal);
+  padding: .65rem .9rem; margin: .6rem 0; font-size: .85rem; border-radius: 0 8px 8px 0;
+}
+.ev-actions { display: flex; gap: .5rem; margin-top: .85rem; flex-wrap: wrap; }
+.note-box { width: 100%; margin-top: .5rem; padding: .5rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: .85rem; min-height: 60px; resize: vertical; }
+.rule-pills { display: flex; flex-wrap: wrap; gap: .3rem; margin: .4rem 0; }
+.rule-pill {
+  font-size: .7rem; font-weight: 600; padding: .15rem .45rem; border-radius: 4px;
+  background: rgba(15,163,163,.15); color: var(--teal);
+}
+
+/* Dashboard extras */
+.needs-list { display: grid; gap: .75rem; margin-bottom: 1.25rem; }
+.needs-card {
+  background: var(--card); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow);
+  display: flex; justify-content: space-between; align-items: center; gap: 1rem; flex-wrap: wrap;
+}
+.needs-card .info { flex: 1; min-width: 180px; }
+.needs-card .info strong { display: block; }
+.chart-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; }
+.chart-card { background: var(--card); border-radius: var(--radius); padding: 1.1rem; box-shadow: var(--shadow); }
+.chart-card h3 { font-size: .95rem; margin-bottom: .5rem; }
+.chart-takeaway { font-size: .8rem; color: var(--muted); margin-top: .5rem; }
+.donut-wrap { display: flex; align-items: center; gap: 1rem; justify-content: center; }
+.progress-bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; display: flex; }
+.progress-bar span { height: 100%; }
+.import-card { background: var(--card); border-radius: var(--radius); padding: 1rem; box-shadow: var(--shadow); font-size: .85rem; margin-bottom: 1rem; }
+
+/* Filters row */
+.filter-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; align-items: center; }
+.filter-row input, .filter-row select {
+  padding: .4rem .6rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); font-size: .85rem;
+}
+
+/* Why not */
+.why-not { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.1rem; margin-top: 1.25rem; }
+.why-not h2 { font-size: 1rem; margin-bottom: .5rem; }
+.why-group { margin-bottom: .85rem; }
+.why-group h4 { font-size: .82rem; color: var(--muted); margin-bottom: .3rem; }
+.why-group ul { list-style: none; font-size: .82rem; }
+.why-group li { padding: .2rem 0; border-bottom: 1px solid var(--border); }
+
+/* Analytics charts */
+.chart-svg { width: 100%; height: auto; }
+.heatmap { display: grid; grid-template-columns: auto repeat(24, 1fr); gap: 2px; font-size: .65rem; }
+.hm-cell { aspect-ratio: 1; border-radius: 2px; min-width: 10px; }
+.hm-label { display: flex; align-items: center; color: var(--muted); padding-right: .3rem; }
+
+/* Help */
+.stepper { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0 1.5rem; }
+.step {
+  flex: 1; min-width: 120px; background: var(--card); border-radius: var(--radius); padding: 1rem;
+  box-shadow: var(--shadow); text-align: center; font-size: .85rem;
+}
+.step .num { display: inline-flex; width: 28px; height: 28px; border-radius: 50%; background: var(--teal); color: #fff; align-items: center; justify-content: center; font-weight: 700; margin-bottom: .4rem; }
+.help-section { background: var(--card); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); margin-bottom: 1rem; }
+.help-section h3 { font-size: 1rem; margin-bottom: .6rem; }
+.help-section p, .help-section li { font-size: .9rem; margin-bottom: .4rem; }
+.glossary dt { font-weight: 600; margin-top: .5rem; }
+.glossary dd { margin-left: 1rem; color: var(--muted); font-size: .85rem; }
+
+/* Report */
+#reportPage { background: #fff; color: #111; padding: 2rem; max-width: 800px; margin: 0 auto; }
+#reportPage h1 { font-size: 1.5rem; margin-bottom: .25rem; }
+#reportPage .meta { color: #555; font-size: .85rem; margin-bottom: 1.5rem; }
+#reportPage table { width: 100%; border-collapse: collapse; font-size: .8rem; margin: 1rem 0; }
+#reportPage th, #reportPage td { border: 1px solid #ddd; padding: .4rem .6rem; text-align: left; }
+#reportPage th { background: #f0f0f0; }
+.report-actions { margin-bottom: 1rem; display: flex; gap: .5rem; flex-wrap: wrap; }
+@media print {
+  .sidebar, .topbar, .report-actions, .drawer-overlay, .settings-drawer, .ev-overlay, .ev-drawer, .replay-overlay { display: none !important; }
+  .main-area { margin-left: 0 !important; }
+  #reportPage { box-shadow: none; }
+}
+
+/* Toast */
+.toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%); background: var(--navy); color: #fff;
+  padding: .7rem 1.25rem; border-radius: 8px; font-size: .85rem; z-index: 200; opacity: 0; transition: opacity .3s; pointer-events: none;
+}
+.toast.show { opacity: 1; }
+
+/* Replay */
+.replay-overlay {
+  position: fixed; inset: 0; background: rgba(11,31,58,.88); z-index: 300;
+  display: none; flex-direction: column; align-items: center; justify-content: center; color: #fff; padding: 2rem; text-align: center;
+}
+.replay-overlay.active { display: flex; }
+.replay-caption { font-size: 1.2rem; max-width: 520px; margin-bottom: 1.25rem; line-height: 1.5; }
+.replay-bar-wrap { width: 100%; max-width: 400px; height: 6px; background: rgba(255,255,255,.2); border-radius: 3px; margin-bottom: 1rem; overflow: hidden; }
+.replay-bar { height: 100%; background: var(--teal); width: 0%; transition: width .3s; }
+.replay-controls { display: flex; gap: .75rem; }
+
+/* Footer */
+.app-footer {
+  text-align: center; padding: 1rem; font-size: .75rem; color: var(--muted);
+  border-top: 1px solid var(--border); margin-top: auto;
+}
+
+/* Empty / error */
+.empty-hint { text-align: center; padding: 2.5rem 1rem; color: var(--muted); background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); }
+.error-banner {
+  background: #FFEBEE; color: var(--priority); padding: .75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-size: .85rem; display: none;
+}
+
+/* Mapping modal */
+.map-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 150; display: none;
+  align-items: center; justify-content: center; padding: 1rem;
+}
+.map-overlay.open { display: flex; }
+.map-card {
+  background: var(--card); border-radius: var(--radius); padding: 1.5rem; max-width: 520px; width: 100%;
+  max-height: 90vh; overflow-y: auto; box-shadow: 0 8px 32px rgba(0,0,0,.2);
+}
+.map-card h2 { font-size: 1.1rem; margin-bottom: .5rem; }
+.map-row { display: flex; gap: .75rem; align-items: center; margin-bottom: .6rem; font-size: .85rem; }
+.map-row label { width: 110px; color: var(--muted); flex-shrink: 0; }
+.map-row select { flex: 1; padding: .35rem .5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--bg); color: var(--text); }
+
+@media (max-width: 900px) {
+  .sidebar { width: 56px; }
+  .sidebar .sb-tag, .nav-item span:not(.ico) { display: none; }
+  .main-area { margin-left: 56px; }
+  :root { --sidebar-w: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
 </style>
 </head>
 <body>
-<h1>LabTrace</h1>
-<p><strong>Full app file pending upload.</strong></p>
-<p>The complete single-file application (<code>labtrace.html</code>, ~112 KB) with R1–R5 detection, multi-dataset history, and Evidence-to-Action is available in the project delivery package.</p>
-<p>Sample CSVs and README are already in this repository.</p>
-<p>To complete the push from your machine:</p>
-<pre>
-git clone https://github.com/Subatharadevi-21/cyber_hack_hackathon.git
-cd cyber_hack_hackathon
-# copy full labtrace.html here
-git add labtrace.html
-git commit -m "Add full LabTrace application"
-git push
-</pre>
-<p>Demo login: <code>lab.assistant</code> / <code>LabTrace@2026</code></p>
+
+<!-- ========== LOGIN ========== -->
+<div id="loginPage">
+  <div class="login-brand">
+    <div class="logo">LabTrace</div>
+    <div class="tag">Explain everything. Accuse no one. Block nothing.</div>
+    <ul>
+      <li>Turns shared-lab login CSVs into an explainable review queue</li>
+      <li>Flags clear patterns (R1–R5) — never locks an account</li>
+      <li>Multi-dataset history — switch between uploads anytime</li>
+      <li>100% client-side. Nothing leaves this machine</li>
+    </ul>
+  </div>
+  <div class="login-form-wrap">
+    <div class="login-card">
+      <h1>Sign in</h1>
+      <p class="sub">Admin access — single operator</p>
+      <div class="field">
+        <label for="loginUser">Username</label>
+        <input type="text" id="loginUser" autocomplete="username" placeholder="admin">
+      </div>
+      <div class="field">
+        <label for="loginPw">Password</label>
+        <div class="pw-wrap">
+          <input type="password" id="loginPw" autocomplete="current-password" placeholder="••••••••">
+          <button type="button" id="togglePw" aria-label="Show password">Show</button>
+        </div>
+      </div>
+      <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;margin-bottom:.75rem;cursor:pointer">
+        <input type="checkbox" id="rememberMe"> Remember me
+      </label>
+      <div class="login-err" id="loginErr" role="alert"></div>
+      <button class="login-btn" id="loginBtn">Sign in</button>
+      <div class="demo-box">
+        <strong>Demo credentials</strong>
+        admin / LabTrace@2026 (Admin)
+        <button class="btn btn-sm" style="margin-top:.5rem" id="fillDemo">Fill demo login</button>
+      </div>
+      <p class="demo-note">Demo login for the prototype. A production version would use the institute's own sign-in.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ========== APP SHELL ========== -->
+<div id="appShell">
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="sb-logo">LabTrace</div>
+    <div class="sb-tag">Explain. Never accuse.</div>
+    <button class="nav-item active" data-page="dashboard"><span class="ico">📊</span> <span>Dashboard</span></button>
+    <button class="nav-item" data-page="cases"><span class="ico">📋</span> <span>Cases</span></button>
+    <button class="nav-item" data-page="datasets"><span class="ico">📁</span> <span>Datasets</span></button>
+    <button class="nav-item" data-page="analytics"><span class="ico">📈</span> <span>Analytics</span></button>
+    <button class="nav-item" data-page="help"><span class="ico">❓</span> <span>Help</span></button>
+  </nav>
+
+  <div class="main-area">
+    <header class="topbar">
+      <h1 id="pageTitle">Dashboard</h1>
+      <span class="data-chip" id="dataChip">No data</span>
+      <button class="btn btn-sm" id="btnUpload">Upload CSV / JSON</button>
+      <input type="file" id="fileInput" accept=".csv,.json,text/csv,application/json" hidden>
+      <button class="btn btn-sm btn-ghost" id="btnSample">Load sample data</button>
+      <button class="btn btn-sm btn-ghost" id="btnReplay">Replay demo</button>
+      <button class="btn btn-sm btn-ghost" id="btnSettings">Settings</button>
+      <button class="btn btn-sm btn-ghost" id="themeToggle" aria-label="Toggle dark mode">◐</button>
+      <div class="user-chip"><span id="userName">—</span> <span class="role-badge" id="userRole">—</span></div>
+      <button class="btn btn-sm btn-ghost" id="btnLogout">Logout</button>
+    </header>
+
+    <div class="content">
+      <div class="error-banner" id="errorBanner"></div>
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <p id="greeting" style="margin-bottom:1rem;font-size:1.05rem"></p>
+        <div class="cards" id="summaryCards">
+          <div class="card"><div class="card-icon">📥</div><div class="card-num" id="nEvents">0</div><div class="card-label">Events imported</div></div>
+          <div class="card"><div class="card-icon">📋</div><div class="card-num" id="nCases">0</div><div class="card-label">Cases</div></div>
+          <div class="card"><div class="card-icon">🔴</div><div class="card-num" id="nPriority" style="color:var(--priority)">0</div><div class="card-label">Priority Review</div></div>
+          <div class="card"><div class="card-icon">🟡</div><div class="card-num" id="nReview" style="color:var(--review)">0</div><div class="card-label">Review</div></div>
+          <div class="card"><div class="card-icon">🟣</div><div class="card-num" id="nInvestigate" style="color:var(--investigate)">0</div><div class="card-label">Investigate</div></div>
+          <div class="card"><div class="card-icon">🟢</div><div class="card-num" id="nRoutine">0</div><div class="card-label">Routine</div></div>
+          <div class="card"><div class="card-icon">🎯</div><div class="card-num" id="nRiskHigh" style="color:var(--priority)">0</div><div class="card-label">High+ risk</div></div>
+          <div class="card"><div class="card-icon">⚠️</div><div class="card-num" id="nSkipped">0</div><div class="card-label">Rows skipped</div></div>
+        </div>
+        <div class="import-card" id="importCard" style="display:none"></div>
+        <div class="whatif" id="whatIf"></div>
+        <h2 style="font-size:1rem;margin:1rem 0 .75rem">Needs your review</h2>
+        <div class="needs-list" id="needsList"></div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <h3>Label split</h3>
+            <div class="donut-wrap" id="donutChart"></div>
+            <p class="chart-takeaway" id="donutTakeaway"></p>
+          </div>
+          <div class="chart-card">
+            <h3>Review progress</h3>
+            <div id="progressChart"></div>
+            <p class="chart-takeaway" id="progressTakeaway"></p>
+          </div>
+        </div>
+        <button class="btn" id="btnReport">Generate report</button>
+      </div>
+
+      <!-- DATASETS -->
+      <div class="page" id="page-datasets">
+        <div class="dataset-panel">
+          <h3>Import history — switch between datasets anytime</h3>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">
+            Each upload is saved as a separate dataset. Select one to review its cases. Previous datasets are never overwritten.
+          </p>
+          <div class="dataset-list" id="datasetList"></div>
+          <div class="dataset-actions">
+            <button class="btn btn-sm" id="btnUpload2">Upload new CSV / JSON</button>
+            <button class="btn btn-sm btn-ghost" id="btnSample2">Load sample data</button>
+            <button class="btn btn-sm btn-ghost btn-danger" id="btnClearAll" style="margin-left:auto">Clear all datasets</button>
+          </div>
+        </div>
+        <div class="import-card" id="importCardDs" style="display:none"></div>
+      </div>
+
+      <!-- CASES -->
+      <div class="page" id="page-cases">
+        <div class="tabs" role="tablist">
+          <button class="tab active" data-filter="all">All cases</button>
+          <button class="tab" data-filter="isolated">Isolated mistakes</button>
+          <button class="tab" data-filter="r1">R1 Failure burst</button>
+          <button class="tab" data-filter="r2">R2 After-hours</button>
+          <button class="tab" data-filter="r3">R3 Cross-computer</button>
+          <button class="tab" data-filter="r4">R4 Slow failures</button>
+          <button class="tab" data-filter="r5">R5 Failures no success</button>
+          <button class="tab" data-filter="r7">R7 Password spray</button>
+          <button class="tab" data-filter="highrisk">High risk</button>
+          <button class="tab" data-filter="whynot">Why NOT flagged</button>
+        </div>
+        <div class="filter-row">
+          <input type="search" id="searchBox" placeholder="Search account, computer, event ID…" style="min-width:200px">
+          <select id="filterLabel">
+            <option value="">All labels</option>
+            <option>Priority Review</option>
+            <option>Review</option>
+            <option>Investigate</option>
+            <option>Routine</option>
+          </select>
+          <select id="filterStatus"><option value="">All statuses</option><option>Pending</option><option>Confirmed</option><option>Dismissed</option></select>
+          <select id="filterComputer"><option value="">All computers</option></select>
+          <button class="btn btn-sm btn-ghost" id="btnExport">Export review queue (CSV)</button>
+        </div>
+        <div class="table-wrap" id="tableWrap">
+          <div class="empty-hint" id="emptyHint"><p>No data loaded yet.</p><p><strong>Load sample data</strong> or <strong>upload a CSV / JSON</strong>.</p></div>
+          <table id="caseTable" style="display:none" role="grid">
+            <thead>
+              <tr>
+                <th data-sort="risk">Risk</th>
+                <th data-sort="label">Label</th>
+                <th data-sort="account">Account</th>
+                <th data-sort="computer">Computer</th>
+                <th data-sort="time">Time span</th>
+                <th>Event IDs</th>
+                <th data-sort="rules">Rule(s)</th>
+                <th>Department <span style="font-weight:400;text-transform:none">(context only)</span></th>
+                <th data-sort="status">Status</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody id="caseBody"></tbody>
+          </table>
+        </div>
+        <div class="why-not hidden" id="whyNotSection">
+          <h2>Why NOT flagged</h2>
+          <p style="font-size:.85rem;color:var(--muted);margin-bottom:.75rem">Routine cases the tool cleared, with the specific reason for each.</p>
+          <div id="whyNotBody"></div>
+        </div>
+      </div>
+
+      <!-- ANALYTICS -->
+      <div class="page" id="page-analytics">
+        <div class="chart-row">
+          <div class="chart-card" style="grid-column:1/-1">
+            <h3>Events per hour of day</h3>
+            <div id="chartHour"></div>
+            <p class="chart-takeaway" id="takeHour"></p>
+          </div>
+          <div class="chart-card">
+            <h3>Failed vs successful logins per account</h3>
+            <div id="chartAccount"></div>
+            <p class="chart-takeaway" id="takeAccount"></p>
+          </div>
+          <div class="chart-card">
+            <h3>Cases by rule</h3>
+            <div id="chartRule"></div>
+            <p class="chart-takeaway" id="takeRule"></p>
+          </div>
+          <div class="chart-card">
+            <h3>Activity by computer</h3>
+            <div id="chartComputer"></div>
+            <p class="chart-takeaway" id="takeComputer"></p>
+          </div>
+          <div class="chart-card" style="grid-column:1/-1">
+            <h3>Day × hour heatmap</h3>
+            <div id="chartHeat"></div>
+            <p class="chart-takeaway" id="takeHeat"></p>
+          </div>
+          <div class="chart-card" style="grid-column:1/-1">
+            <h3>Threshold sensitivity (N from 1 to 10)</h3>
+            <div id="chartSens"></div>
+            <p class="chart-takeaway">Lower N finds more cases but creates more false alarms.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- HELP -->
+      <div class="page" id="page-help">
+        <div class="help-section">
+          <h3>How LabTrace works</h3>
+          <div class="stepper">
+            <div class="step"><div class="num">1</div>Import CSV / JSON</div>
+            <div class="step"><div class="num">2</div>Group &amp; correlate</div>
+            <div class="step"><div class="num">3</div>Detect R1–R5 patterns</div>
+            <div class="step"><div class="num">4</div>Explain every decision</div>
+            <div class="step"><div class="num">5</div>Human verifies &amp; decides</div>
+          </div>
+        </div>
+        <div class="help-section">
+          <h3>Rules explained</h3>
+          <p><strong>R1 — Failure burst then success:</strong> N or more failed attempts within W minutes, then success on the same account + computer.</p>
+          <p><strong>R2 — After-hours success:</strong> Successful login outside lab open/close times or on a non-working day. Boundary times count as inside hours.</p>
+          <p><strong>R3 — Cross-computer activity:</strong> Same account appears on ≥2 different computers within the cross-computer window (default 30 min), especially with failures. Catches distributed guessing that R1 misses.</p>
+          <p><strong>R4 — Slow-burn repeated failures:</strong> Many failures spread over a longer period (default ≥8 over 2 hours) without meeting the short R1/R5 burst window. Catches deliberate slow guessing.</p>
+          <p><strong>R5 — Failure burst without success:</strong> N or more failures within W minutes with no subsequent success. No access gained does not mean no threat.</p>
+          <p><strong>R7 — Password spray shape:</strong> Many distinct accounts with few failures each on the same computer within a short window — classic spray pattern.</p>
+          <p><strong>Risk score (0–100):</strong> Deterministic score from matched rules and volume. Optional AI risk summary rephrases facts only — never invents events.</p>
+          <p><strong>Priority Review:</strong> Strong combinations (e.g. R1+R2, R3 with heavy failures, R5 with very high count).</p>
+          <p><strong>Review / Investigate:</strong> Single strong or weaker anomaly patterns.</p>
+          <p><strong>Routine:</strong> Neither rule matches — every routine case still gets a specific reason.</p>
+        </div>
+        <div class="help-section">
+          <h3>Multi-dataset history</h3>
+          <p>Every upload is saved as a separate dataset. Go to the <strong>Datasets</strong> page to switch between them, rename, or delete. Your previous cases remain fully reviewable.</p>
+        </div>
+        <div class="help-section">
+          <h3>CSV / JSON format</h3>
+          <p>Required fields (names are flexible — column mapping is offered when headers differ):</p>
+          <p><code>event_id, timestamp, account, computer, event, department_case</code></p>
+          <p>timestamp: YYYY-MM-DD HH:MM:SS · event: FAILED or SUCCESS</p>
+          <p>JSON: array of objects with the same keys (or aliases).</p>
+          <button class="btn btn-sm" id="btnDlTemplate">Download CSV template</button>
+          <button class="btn btn-sm btn-ghost" id="btnDlSample">Download sample CSV</button>
+        </div>
+        <div class="help-section">
+          <h3>Glossary</h3>
+          <dl class="glossary">
+            <dt>Failed login (Windows 4625)</dt><dd>An unsuccessful authentication attempt.</dd>
+            <dt>Successful login (Windows 4624)</dt><dd>A successful authentication.</dd>
+            <dt>Brute force (MITRE T1110)</dt><dd>Repeated password guessing; LabTrace surfaces short bursts for review.</dd>
+            <dt>Valid accounts (MITRE T1078)</dt><dd>Use of legitimate credentials; after-hours success may still warrant a check.</dd>
+            <dt>False positive</dt><dd>A flagged case that a human later dismisses as expected.</dd>
+            <dt>Human in the loop</dt><dd>LabTrace never acts alone — a person confirms or dismisses every alert.</dd>
+            <dt>Synthetic data</dt><dd>The sample dataset is fabricated for the prototype; it is not real lab traffic.</dd>
+          </dl>
+        </div>
+        <div class="help-section">
+          <h3>FAQ</h3>
+          <p><strong>Does it block accounts?</strong> No. LabTrace never blocks, locks, disables or bans anyone.</p>
+          <p><strong>Why is department not used?</strong> department_case is a context label for the human only. The rule engine never reads it.</p>
+          <p><strong>What does it miss?</strong> Very slow attacks, credential use that looks completely normal, or activity outside the imported logs.</p>
+          <p><strong>Is data sent anywhere?</strong> No. Everything runs in your browser. Nothing leaves this machine.</p>
+        </div>
+        <div class="help-section">
+          <h3>Keyboard shortcuts</h3>
+          <p>Tab / Shift+Tab navigate · Enter or Space selects a case · Escape closes drawers</p>
+          <p style="margin-top:.75rem;color:var(--muted)">Contact the lab administrator for production access or support.</p>
+        </div>
+      </div>
+
+      <!-- REPORT -->
+      <div class="page" id="page-report">
+        <div class="report-actions">
+          <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+          <button class="btn btn-ghost" id="btnReportCsv">Download CSV</button>
+          <button class="btn btn-ghost" id="btnReportBack">Back</button>
+        </div>
+        <div id="reportContent"></div>
+      </div>
+    </div>
+
+    <footer class="app-footer">
+      LabTrace prioritizes review. It never accuses anyone and never blocks an account. A human decides.
+    </footer>
+  </div>
+</div>
+
+<!-- Settings drawer -->
+<div class="drawer-overlay" id="settingsOverlay"></div>
+<aside class="settings-drawer" id="settingsDrawer" aria-label="Settings">
+  <h2>Detection parameters</h2>
+  <div class="ctrl-group">
+    <label for="sliderN">N (min failures for burst) = <span id="valN">3</span></label>
+    <input type="range" id="sliderN" min="1" max="10" value="3">
+  </div>
+  <div class="ctrl-group">
+    <label for="sliderW">W (window minutes) = <span id="valW">5</span></label>
+    <input type="range" id="sliderW" min="1" max="60" value="5">
+  </div>
+  <div class="ctrl-group">
+    <label for="sliderCross">Cross-computer window (min) = <span id="valCross">30</span></label>
+    <input type="range" id="sliderCross" min="5" max="120" value="30">
+  </div>
+  <div class="ctrl-group">
+    <label>Lab open / close</label>
+    <div style="display:flex;gap:.5rem">
+      <input type="time" id="openTime" value="08:30">
+      <input type="time" id="closeTime" value="17:30">
+    </div>
+  </div>
+  <div class="ctrl-group">
+    <label>Working days</label>
+    <div class="day-chips" id="dayChips">
+      <button type="button" class="day-chip" data-day="1" aria-pressed="true">Mon</button>
+      <button type="button" class="day-chip" data-day="2" aria-pressed="true">Tue</button>
+      <button type="button" class="day-chip" data-day="3" aria-pressed="true">Wed</button>
+      <button type="button" class="day-chip" data-day="4" aria-pressed="true">Thu</button>
+      <button type="button" class="day-chip" data-day="5" aria-pressed="true">Fri</button>
+      <button type="button" class="day-chip" data-day="6" aria-pressed="false">Sat</button>
+      <button type="button" class="day-chip" data-day="0" aria-pressed="false">Sun</button>
+    </div>
+    <div class="preset-btns">
+      <button class="btn btn-sm btn-ghost" data-preset="mf">Mon to Fri</button>
+      <button class="btn btn-sm btn-ghost" data-preset="ms">Mon to Sat</button>
+      <button class="btn btn-sm btn-ghost" data-preset="all">Every day</button>
+      <button class="btn btn-sm btn-ghost" data-preset="clear">Clear</button>
+    </div>
+    <div class="warn-days hidden" id="warnDays">No working day selected — every success will be treated as outside lab hours.</div>
+  </div>
+  <div class="ctrl-group">
+    <label style="display:flex;align-items:center;gap:.4rem;cursor:pointer">
+      <input type="checkbox" id="satDiff"> Different hours on Saturday
+    </label>
+    <div id="satHours" class="hidden" style="display:flex;gap:.5rem;margin-top:.4rem">
+      <input type="time" id="satOpen" value="09:00">
+      <input type="time" id="satClose" value="13:00">
+    </div>
+  </div>
+  <div class="hours-summary" id="hoursSummary"></div>
+  <button class="btn btn-sm" id="btnReset" style="margin-top:1rem">Reset to defaults</button>
+  <button class="btn btn-sm btn-ghost" id="btnCloseSettings" style="margin-top:.5rem">Close</button>
+</aside>
+
+<!-- Evidence drawer -->
+<div class="ev-overlay" id="evOverlay"></div>
+<aside class="ev-drawer" id="evDrawer" aria-label="Evidence panel">
+  <button class="btn btn-sm btn-ghost" id="btnCloseEv" style="float:right">✕</button>
+  <h3>Evidence-to-Action</h3>
+  <div id="evContent"></div>
+</aside>
+
+<!-- Column mapping modal -->
+<div class="map-overlay" id="mapOverlay">
+  <div class="map-card">
+    <h2>Map columns</h2>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:1rem">Headers did not match the expected names. Map each required field to a column from your file.</p>
+    <div id="mapRows"></div>
+    <div style="display:flex;gap:.5rem;margin-top:1rem">
+      <button class="btn" id="btnMapConfirm">Import with this mapping</button>
+      <button class="btn btn-ghost" id="btnMapCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Replay -->
+<div class="replay-overlay" id="replayOverlay" role="dialog" aria-modal="true">
+  <div class="replay-caption" id="replayCaption"></div>
+  <div class="replay-bar-wrap"><div class="replay-bar" id="replayBar"></div></div>
+  <div class="replay-controls">
+    <button class="btn" id="replayPause">Pause</button>
+    <button class="btn btn-ghost" id="replaySkip">Skip</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   LabTrace v2 — multi-dataset · R1–R5 · Evidence-to-Action
+   ============================================================ */
+
+const SAMPLE_CSV = `event_id,timestamp,account,computer,event,department_case
+1,2026-10-09 08:41:10,a.kumar,PC-02,SUCCESS,CSE
+2,2026-10-09 09:05:22,r.priya,PC-03,FAILED,ECE
+3,2026-10-09 09:05:48,r.priya,PC-03,SUCCESS,ECE
+4,2026-10-09 09:30:00,m.arun,PC-04,SUCCESS,MECH
+5,2026-10-09 10:12:15,s.divya,PC-05,FAILED,CIVIL
+6,2026-10-09 10:12:40,s.divya,PC-05,FAILED,CIVIL
+7,2026-10-09 10:13:05,s.divya,PC-05,SUCCESS,CIVIL
+8,2026-10-09 11:00:00,guest_lab,PC-06,FAILED,GUEST
+9,2026-10-09 11:01:10,guest_lab,PC-06,FAILED,GUEST
+10,2026-10-09 11:02:20,guest_lab,PC-06,FAILED,GUEST
+11,2026-10-09 11:03:05,guest_lab,PC-06,SUCCESS,GUEST
+12,2026-10-09 12:15:00,k.vikram,PC-07,SUCCESS,EEE
+13,2026-10-09 09:00:00,t.nisha,PC-08,FAILED,CSE
+14,2026-10-09 10:30:00,t.nisha,PC-08,FAILED,CSE
+15,2026-10-09 12:00:00,t.nisha,PC-08,FAILED,CSE
+16,2026-10-09 13:30:00,t.nisha,PC-08,FAILED,CSE
+17,2026-10-09 13:31:00,t.nisha,PC-08,SUCCESS,CSE
+18,2026-10-09 14:20:00,l.meena,PC-09,SUCCESS,ECE
+19,2026-10-09 16:45:00,p.sanjay,PC-10,SUCCESS,MECH
+20,2026-10-09 19:40:00,admin.lab,PC-01,SUCCESS,CSE
+21,2026-10-09 17:30:00,j.ravi,PC-02,SUCCESS,ECE
+22,2026-10-10 02:15:03,x.user,PC-01,FAILED,ECE
+23,2026-10-10 02:15:40,x.user,PC-01,FAILED,ECE
+24,2026-10-10 02:16:21,x.user,PC-01,FAILED,ECE
+25,2026-10-10 02:17:02,x.user,PC-01,FAILED,ECE
+26,2026-10-10 02:18:10,x.user,PC-01,SUCCESS,ECE
+27,2026-10-10 10:00:00,guest_lab,PC-06,SUCCESS,GUEST
+28,2026-10-09 15:00:00,d.karthik,PC-03,FAILED,CIVIL
+29,2026-10-09 15:30:00,b.anita,PC-04,SUCCESS,CSE
+30,not-a-date,c.test,PC-02,SUCCESS,ECE
+31,2026-10-09 14:05:00,u.cross,PC-01,FAILED,CSE
+32,2026-10-09 14:06:10,u.cross,PC-02,FAILED,CSE
+33,2026-10-09 14:07:20,u.cross,PC-03,FAILED,CSE
+34,2026-10-09 14:08:00,u.cross,PC-03,SUCCESS,CSE
+35,2026-10-09 16:00:00,brute.no,PC-05,FAILED,MECH
+36,2026-10-09 16:00:30,brute.no,PC-05,FAILED,MECH
+37,2026-10-09 16:01:00,brute.no,PC-05,FAILED,MECH
+38,2026-10-09 16:01:30,brute.no,PC-05,FAILED,MECH
+39,2026-10-09 16:02:00,brute.no,PC-05,FAILED,MECH
+40,2026-10-09 08:00:00,slow.burn,PC-08,FAILED,CSE
+41,2026-10-09 08:45:00,slow.burn,PC-08,FAILED,CSE
+42,2026-10-09 09:30:00,slow.burn,PC-08,FAILED,CSE
+43,2026-10-09 10:15:00,slow.burn,PC-08,FAILED,CSE
+44,2026-10-09 11:00:00,slow.burn,PC-08,FAILED,CSE
+45,2026-10-09 11:50:00,slow.burn,PC-08,FAILED,CSE
+46,2026-10-09 12:40:00,slow.burn,PC-08,FAILED,CSE
+47,2026-10-09 13:20:00,slow.burn,PC-08,FAILED,CSE
+48,2026-10-09 14:10:00,spray.a,PC-09,FAILED,GUEST
+49,2026-10-09 14:10:15,spray.b,PC-09,FAILED,GUEST
+50,2026-10-09 14:10:30,spray.c,PC-09,FAILED,GUEST
+51,2026-10-09 14:10:45,spray.d,PC-09,FAILED,GUEST
+52,2026-10-09 14:11:00,spray.e,PC-09,FAILED,GUEST
+53,2026-10-09 14:11:15,spray.f,PC-09,FAILED,GUEST`;
+
+/* ---------- State ---------- */
+let datasets = [];          // [{ id, name, source, events, cases, statusMap, skipped, skipReasons, importedAt }]
+let activeDatasetId = null;
+let selectedId = null;
+let currentFilter = 'all';
+let sortCol = 'label';
+let sortDir = 1;
+let prevCounts = { priority: 0, review: 0, investigate: 0, routine: 0 };
+let session = null;
+let loginAttempts = 0;
+let pendingMap = null;      // for column mapping
+
+let params = {
+  N: 3, W: 5, crossWin: 30,
+  openTime: '08:30', closeTime: '17:30',
+  workingDays: new Set([1,2,3,4,5]),
+  satDiff: false, satOpen: '09:00', satClose: '13:00'
+};
+
+/* ---------- Utilities ---------- */
+function escapeHtml(s) {
+  if (s == null) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function parseTimestamp(str) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2}):(\d{2})$/.exec(String(str).trim());
+  if (!m) return null;
+  return Date.UTC(+m[1], +m[2]-1, +m[3], +m[4], +m[5], +m[6]);
+}
+
+function formatTime(utcMs) {
+  const d = new Date(utcMs);
+  const p = n => String(n).padStart(2,'0');
+  return d.getUTCFullYear() + '-' + p(d.getUTCMonth()+1) + '-' + p(d.getUTCDate()) + ' ' +
+         p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds());
+}
+
+function formatShort(utcMs) {
+  const d = new Date(utcMs);
+  const p = n => String(n).padStart(2,'0');
+  return p(d.getUTCHours()) + ':' + p(d.getUTCMinutes()) + ':' + p(d.getUTCSeconds());
+}
+
+function timeToMinutes(t) {
+  const [h, m] = t.split(':').map(Number);
+  return h * 60 + m;
+}
+
+function isInsideLabHours(utcMs, opts) {
+  const d = new Date(utcMs);
+  const day = d.getUTCDay();
+  const mins = d.getUTCHours() * 60 + d.getUTCMinutes();
+  if (opts.satDiff && day === 6) {
+    const open = timeToMinutes(opts.satOpen);
+    const close = timeToMinutes(opts.satClose);
+    return mins >= open && mins <= close;
+  }
+  if (!opts.workingDays.has(day)) return false;
+  const open = timeToMinutes(opts.openTime);
+  const close = timeToMinutes(opts.closeTime);
+  return mins >= open && mins <= close;
+}
+
+function parseCSV(text) {
+  const lines = text.replace(/\r\n/g,'\n').replace(/\r/g,'\n').split('\n');
+  const rows = [];
+  for (const line of lines) {
+    if (!line.trim()) continue;
+    const fields = [];
+    let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (inQ) {
+        if (c === '"') { if (line[i+1] === '"') { cur += '"'; i++; } else inQ = false; }
+        else cur += c;
+      } else {
+        if (c === '"') inQ = true;
+        else if (c === ',') { fields.push(cur); cur = ''; }
+        else cur += c;
+      }
+    }
+    fields.push(cur);
+    rows.push(fields);
+  }
+  return rows;
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3200);
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  b.textContent = msg;
+  b.style.display = 'block';
+  setTimeout(() => { b.style.display = 'none'; }, 6000);
+}
+
+function activeDs() {
+  return datasets.find(d => d.id === activeDatasetId) || null;
+}
+
+
+/* ---------- Risk score + AI-style summary (facts only) ---------- */
+function riskBand(score) {
+  if (score >= 85) return 'Critical';
+  if (score >= 65) return 'High';
+  if (score >= 40) return 'Medium';
+  return 'Low';
+}
+function riskClass(score) {
+  const b = riskBand(score).toLowerCase();
+  return 'badge-risk-' + (b === 'critical' ? 'critical' : b === 'high' ? 'high' : b === 'medium' ? 'medium' : 'low');
+}
+function computeRisk(c) {
+  let score = 0;
+  const parts = [];
+  if (c.r1 && c.r2) { score += 45; parts.push({k:'R1+R2 (burst + after-hours)', v:45}); }
+  else if (c.r1) { score += 35; parts.push({k:'R1 failure burst then success', v:35}); }
+  else if (c.r2) { score += 25; parts.push({k:'R2 after-hours success', v:25}); }
+  if (c.r5) {
+    const n = (c.failuresInW && c.failuresInW.length) || (c.failures && c.failures.length) || 0;
+    const add = n >= (params.N * 2) ? 40 : 30;
+    score += add; parts.push({k:'R5 failures with no success', v:add});
+  }
+  if (c.r3) {
+    const nc = (c.computers && c.computers.length) || 2;
+    const add = nc >= 3 ? 25 : 18;
+    score += add; parts.push({k:'R3 cross-computer (' + nc + ' hosts)', v:add});
+  }
+  if (c.r4) { score += 22; parts.push({k:'R4 slow-burn failures', v:22}); }
+  if (c.r7) { score += 38; parts.push({k:'R7 password spray pattern', v:38}); }
+  const failN = (c.failures && c.failures.length) || 0;
+  if (failN >= 8) { score += 12; parts.push({k:'High failure volume (' + failN + ')', v:12}); }
+  else if (failN >= 5) { score += 6; parts.push({k:'Elevated failures (' + failN + ')', v:6}); }
+  if (c.label === 'Routine' && failN <= 1) { score = Math.min(score, 15); }
+  if (c.label === 'Routine' && !c.r1 && !c.r2 && !c.r3 && !c.r4 && !c.r5 && !c.r7) {
+    score = Math.min(score, 20);
+    if (!parts.length) parts.push({k:'No rule match (routine)', v:score});
+  }
+  score = Math.max(0, Math.min(100, score));
+  return { score, band: riskBand(score), parts };
+}
+function aiRiskSummary(c, risk) {
+  // Deterministic, facts-only narrative (no external LLM required)
+  const lines = [];
+  lines.push('Risk ' + risk.score + '/100 (' + risk.band + ').');
+  if (c.r1) lines.push('A successful login was preceded by ' + (c.failuresInW||[]).length + ' failed attempt(s) within the configured burst window on the same account and computer.');
+  if (c.r2) lines.push('The successful login occurred outside configured lab hours or on a non-working day.');
+  if (c.r3) lines.push('The same account appeared on ' + ((c.computers&&c.computers.length)||'?') + ' computer(s) within the cross-computer window (' + params.crossWin + ' min).');
+  if (c.r4) lines.push('Repeated failures were spread over a longer period without forming a short burst — consistent with slow password guessing.');
+  if (c.r5) lines.push('Multiple failed attempts occurred with no subsequent success; no access was gained, but the volume warrants review.');
+  if (c.r7) lines.push('Several distinct accounts each had a small number of failures on the same computer in a short window — a password-spray shaped pattern.');
+  if (!c.r1 && !c.r2 && !c.r3 && !c.r4 && !c.r5 && !c.r7) lines.push('No detection rule matched. Treated as routine with a specific clear reason.');
+  lines.push('This summary uses only imported event fields and rule outcomes; it does not invent evidence.');
+  return lines.join(' ');
+}
+
+/* ---------- ENGINE (R1–R7) ---------- */
+function detect(events, opts) {
+  const { N, W, crossWin } = opts;
+  const groups = new Map();
+  for (const e of events) {
+    const key = e.account + '|' + e.computer;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(e);
+  }
+  const result = [];
+  let caseCounter = 0;
+
+  for (const [, list] of groups) {
+    let failures = [];
+    for (const e of list) {
+      if (e.event === 'FAILED') {
+        failures.push(e);
+      } else {
+        const successTime = e.ts;
+        const windowMs = W * 60 * 1000;
+        const failuresInW = failures.filter(f => successTime - f.ts <= windowMs && successTime >= f.ts);
+        const B = failuresInW.length;
+        const r1 = B >= N;
+        const r2 = !isInsideLabHours(successTime, opts);
+        let label, message, reasons = [];
+        if (r1 && r2) {
+          label = 'Priority Review'; message = 'Human review required — burst + after-hours';
+          reasons = ['R1','R2'];
+        } else if (r1 || r2) {
+          label = 'Review'; message = 'Check when available';
+          if (r1) reasons.push('R1');
+          if (r2) reasons.push('R2');
+        } else {
+          label = 'Routine';
+          const F = failures.length;
+          if (F === 0) message = 'Normal login inside lab hours';
+          else if (F === 1) message = 'Single mistyped password, then success';
+          else if (B < N) {
+            if (F >= N) {
+              const first = failures[0].ts, last = failures[failures.length-1].ts;
+              const spanMs = last - first;
+              const hours = Math.floor(spanMs / 3600000);
+              const mins = Math.round((spanMs % 3600000) / 60000);
+              let spanStr = '';
+              if (hours > 0) spanStr += hours + ' h';
+              if (mins > 0) spanStr += (hours > 0 ? ' ' : '') + mins + ' min';
+              if (!spanStr) spanStr = 'less than 1 min';
+              message = F + ' failures spread over ' + spanStr + ', no burst of ' + N + ' within ' + W + ' min';
+            } else {
+              const winSpan = B > 1 ? Math.round((failuresInW[B-1].ts - failuresInW[0].ts) / 60000) : 0;
+              message = F + ' failure' + (F === 1 ? '' : 's') + ' within ' + (winSpan || W) + ' min, below N = ' + N;
+            }
+          } else {
+            message = F + ' failure' + (F === 1 ? '' : 's') + ', below N = ' + N;
+          }
+        }
+        const allEvents = failures.concat([e]);
+        caseCounter++;
+        const base = {
+          id: 'c' + caseCounter,
+          account: e.account, computer: e.computer, label, message, reasons,
+          r1, r2, r3: false, r4: false, r5: false, r7: false,
+          events: allEvents.slice(), failures: failures.slice(), success: e,
+          failuresInW: failuresInW.slice(), department: e.department_case || '',
+          timeSpan: allEvents.length > 1 ? formatTime(allEvents[0].ts) + ' → ' + formatTime(e.ts) : formatTime(e.ts),
+          eventIds: allEvents.map(x => x.event_id).join(', '),
+          startTs: allEvents[0].ts,
+          computers: [e.computer]
+        };
+        const rk = computeRisk(base);
+        base.risk = rk.score; base.riskBand = rk.band; base.riskParts = rk.parts;
+        base.aiSummary = aiRiskSummary(base, rk);
+        result.push(base);
+        failures = [];
+      }
+    }
+    if (failures.length > 0) {
+      const windowMs = W * 60 * 1000;
+      let maxBurst = 0, burstEvents = [];
+      for (let i = 0; i < failures.length; i++) {
+        const inW = failures.filter(f => f.ts >= failures[i].ts && f.ts - failures[i].ts <= windowMs);
+        if (inW.length > maxBurst) { maxBurst = inW.length; burstEvents = inW; }
+      }
+      const r5 = maxBurst >= N;
+      // R4: many failures over long span without short burst
+      const spanMs = failures[failures.length-1].ts - failures[0].ts;
+      const r4 = !r5 && failures.length >= 8 && spanMs >= 2 * 3600000;
+      let label, message, reasons = [];
+      if (r5) {
+        if (maxBurst >= N * 2) {
+          label = 'Priority Review';
+          message = maxBurst + ' failed attempts in ' + W + ' min with no success — strong brute-force candidate';
+        } else {
+          label = 'Review';
+          message = maxBurst + ' failed attempts in ' + W + ' min with no success';
+        }
+        reasons = ['R5'];
+      } else if (r4) {
+        label = 'Investigate';
+        message = failures.length + ' failures spread over ' + Math.round(spanMs/3600000) + '+ hours, no short burst — slow-burn pattern';
+        reasons = ['R4'];
+      } else {
+        label = 'Routine';
+        message = 'Failed attempts with no later success, no access gained (below N = ' + N + ')';
+      }
+      caseCounter++;
+      const base = {
+        id: 'c' + caseCounter,
+        account: failures[0].account, computer: failures[0].computer,
+        label, message, reasons,
+        r1: false, r2: false, r3: false, r4, r5, r7: false,
+        events: failures.slice(), failures: failures.slice(), success: null,
+        failuresInW: burstEvents.slice(), department: failures[0].department_case || '',
+        timeSpan: failures.length > 1
+          ? formatTime(failures[0].ts) + ' → ' + formatTime(failures[failures.length-1].ts)
+          : formatTime(failures[0].ts),
+        eventIds: failures.map(x => x.event_id).join(', '),
+        startTs: failures[0].ts,
+        computers: [failures[0].computer]
+      };
+      const rk = computeRisk(base);
+      base.risk = rk.score; base.riskBand = rk.band; base.riskParts = rk.parts;
+      base.aiSummary = aiRiskSummary(base, rk);
+      result.push(base);
+    }
+  }
+
+  // R3 — Cross-computer
+  const byAccount = new Map();
+  for (const e of events) {
+    if (!byAccount.has(e.account)) byAccount.set(e.account, []);
+    byAccount.get(e.account).push(e);
+  }
+  const crossWinMs = crossWin * 60 * 1000;
+  for (const [account, list] of byAccount) {
+    list.sort((a, b) => a.ts - b.ts);
+    let windowStart = 0;
+    const flaggedWindows = [];
+    for (let i = 0; i < list.length; i++) {
+      while (windowStart < i && list[i].ts - list[windowStart].ts > crossWinMs) windowStart++;
+      const comps = new Set();
+      for (let j = windowStart; j <= i; j++) comps.add(list[j].computer);
+      if (comps.size >= 2) {
+        const slice = list.slice(windowStart, i + 1);
+        const fails = slice.filter(e => e.event === 'FAILED').length;
+        const hasSuccess = slice.some(e => e.event === 'SUCCESS');
+        const eventIdSet = new Set(slice.map(e => e.event_id));
+        const already = result.some(c => c.account === account && c.r3 &&
+          c.events.some(ev => eventIdSet.has(ev.event_id)));
+        if (!already) flaggedWindows.push({ slice, comps: [...comps], fails, hasSuccess });
+      }
+    }
+    for (const fw of flaggedWindows) {
+      const reasons = ['R3'];
+      let label, message;
+      if (fw.fails >= N && fw.hasSuccess) {
+        label = 'Priority Review';
+        message = 'Same account on ' + fw.comps.length + ' computers with failures then success — possible distributed guessing';
+      } else if (fw.fails >= N) {
+        label = 'Review';
+        message = 'Same account on ' + fw.comps.length + ' computers with ' + fw.fails + ' failures';
+      } else {
+        label = 'Investigate';
+        message = 'Same account active on ' + fw.comps.length + ' computers within ' + crossWin + ' min';
+      }
+      const covered = result.some(c => c.account === account &&
+        (c.label === 'Priority Review' || c.label === 'Review') &&
+        fw.slice.some(ev => c.eventIds.includes(String(ev.event_id))));
+      if (covered && label === 'Investigate') continue;
+      caseCounter++;
+      const base = {
+        id: 'c' + caseCounter,
+        account, computer: fw.comps.join(', '),
+        label, message, reasons,
+        r1: false, r2: false, r3: true, r4: false, r5: false, r7: false,
+        events: fw.slice.slice(), failures: fw.slice.filter(e => e.event === 'FAILED'),
+        success: fw.slice.find(e => e.event === 'SUCCESS') || null,
+        failuresInW: fw.slice.filter(e => e.event === 'FAILED'),
+        department: fw.slice[0].department_case || '',
+        timeSpan: formatTime(fw.slice[0].ts) + ' → ' + formatTime(fw.slice[fw.slice.length-1].ts),
+        eventIds: fw.slice.map(x => x.event_id).join(', '),
+        startTs: fw.slice[0].ts,
+        computers: fw.comps
+      };
+      const rk = computeRisk(base);
+      base.risk = rk.score; base.riskBand = rk.band; base.riskParts = rk.parts;
+      base.aiSummary = aiRiskSummary(base, rk);
+      result.push(base);
+    }
+  }
+
+  // R7 — Password spray: same computer, many accounts, few fails each, short window
+  const byComp = new Map();
+  for (const e of events) {
+    if (e.event !== 'FAILED') continue;
+    if (!byComp.has(e.computer)) byComp.set(e.computer, []);
+    byComp.get(e.computer).push(e);
+  }
+  const sprayWinMs = Math.max(W, 10) * 60 * 1000;
+  for (const [computer, list] of byComp) {
+    list.sort((a, b) => a.ts - b.ts);
+    let windowStart = 0;
+    for (let i = 0; i < list.length; i++) {
+      while (windowStart < i && list[i].ts - list[windowStart].ts > sprayWinMs) windowStart++;
+      const slice = list.slice(windowStart, i + 1);
+      const accounts = [...new Set(slice.map(e => e.account))];
+      if (accounts.length >= 5) {
+        const eventIdSet = new Set(slice.map(e => e.event_id));
+        const already = result.some(c => c.r7 && c.computer === computer &&
+          c.events.some(ev => eventIdSet.has(ev.event_id)));
+        if (already) continue;
+        caseCounter++;
+        const base = {
+          id: 'c' + caseCounter,
+          account: accounts.slice(0, 6).join(', ') + (accounts.length > 6 ? '…' : ''),
+          computer,
+          label: accounts.length >= 8 ? 'Priority Review' : 'Review',
+          message: accounts.length + ' distinct accounts failed on ' + computer + ' within ~' + Math.max(W, 10) + ' min — password spray shape',
+          reasons: ['R7'],
+          r1: false, r2: false, r3: false, r4: false, r5: false, r7: true,
+          events: slice.slice(), failures: slice.slice(), success: null,
+          failuresInW: slice.slice(), department: slice[0].department_case || '',
+          timeSpan: formatTime(slice[0].ts) + ' → ' + formatTime(slice[slice.length-1].ts),
+          eventIds: slice.map(x => x.event_id).join(', '),
+          startTs: slice[0].ts,
+          computers: [computer],
+          sprayAccounts: accounts
+        };
+        const rk = computeRisk(base);
+        base.risk = rk.score; base.riskBand = rk.band; base.riskParts = rk.parts;
+        base.aiSummary = aiRiskSummary(base, rk);
+        result.push(base);
+        break; // one spray case per computer window peak
+      }
+    }
+  }
+
+  const order = { 'Priority Review': 0, 'Review': 1, 'Investigate': 2, 'Routine': 3 };
+  result.sort((a, b) => {
+    const ra = b.risk - a.risk;
+    if (Math.abs(ra) > 5) return ra;
+    const oa = order[a.label] - order[b.label];
+    if (oa !== 0) return oa;
+    return a.startTs - b.startTs;
+  });
+  return result;
+}
+
+/* ---------- AUTH ---------- */
+const DEMO_USERS = {
+  'admin': { hash: null, role: 'Admin', pw: 'LabTrace@2026' }
+};
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+
+async function initHashes() {
+  for (const u of Object.keys(DEMO_USERS)) {
+    DEMO_USERS[u].hash = await sha256(DEMO_USERS[u].pw);
+  }
+}
+
+function saveSession(s) {
+  session = s;
+  try { if (s) sessionStorage.setItem('labtrace_session', JSON.stringify(s)); else sessionStorage.removeItem('labtrace_session'); } catch (_) {}
+}
+
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem('labtrace_session');
+    if (raw) return JSON.parse(raw);
+  } catch (_) {}
+  return null;
+}
+
+async function tryLogin() {
+  const user = document.getElementById('loginUser').value.trim().toLowerCase();
+  const pw = document.getElementById('loginPw').value;
+  const err = document.getElementById('loginErr');
+  if (!user || !pw) { err.textContent = 'Check your username and password and try again.'; return; }
+  const entry = DEMO_USERS[user];
+  const h = await sha256(pw);
+  if (!entry || h !== entry.hash) {
+    loginAttempts++;
+    err.textContent = 'Check your username and password and try again. (Attempt ' + loginAttempts + ')';
+    return;
+  }
+  err.textContent = '';
+  const s = { user, role: entry.role, name: user };
+  if (document.getElementById('rememberMe').checked) saveSession(s);
+  else { session = s; }
+  enterApp();
+}
+
+function enterApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('appShell').classList.add('active');
+  document.getElementById('userName').textContent = session.name;
+  document.getElementById('userRole').textContent = session.role;
+  document.getElementById('greeting').textContent = 'Welcome, ' + session.name + '. Here is today\'s review queue.';
+  if (datasets.length === 0) loadSample();
+  else runDetect();
+}
+
+function logout() {
+  saveSession(null);
+  session = null;
+  document.getElementById('appShell').classList.remove('active');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('loginPw').value = '';
+  document.getElementById('loginErr').textContent = '';
+}
+
+/* ---------- Smart Import ---------- */
+const FIELD_ALIASES = {
+  event_id: ['event_id','eventid','id','event_id','record_id','log_id'],
+  timestamp: ['timestamp','time','datetime','date_time','event_time','@timestamp','created'],
+  account: ['account','user','username','user_name','account_name','targetusername','target_user'],
+  computer: ['computer','host','hostname','machine','computer_name','workstation','device'],
+  event: ['event','event_type','type','action','status','outcome','result'],
+  department_case: ['department_case','department','dept','org','team','case']
+};
+
+function autoMapHeaders(headers) {
+  const lower = headers.map(h => h.trim().toLowerCase().replace(/[\s\-]/g, '_'));
+  const map = {};
+  for (const [field, aliases] of Object.entries(FIELD_ALIASES)) {
+    let found = -1;
+    for (const a of aliases) {
+      const idx = lower.indexOf(a);
+      if (idx >= 0) { found = idx; break; }
+    }
+    map[field] = found;
+  }
+  return map;
+}
+
+function rowsToEvents(rows, idx, sourceName) {
+  const events = [];
+  let skipped = 0;
+  const skipReasons = [];
+  const seenIds = new Set();
+  for (let i = 1; i < rows.length; i++) {
+    const r = rows[i];
+    if (r.length < 3) { skipped++; skipReasons.push('row ' + (i+1) + ' missing fields'); continue; }
+    const eventVal = (r[idx.event] || '').trim().toUpperCase();
+    if (eventVal !== 'FAILED' && eventVal !== 'SUCCESS') {
+      // try common aliases
+      const raw = (r[idx.event] || '').trim().toLowerCase();
+      if (['fail','failure','failed logon','4625'].includes(raw)) { /* treat as FAILED */ }
+      else if (['success','ok','successful','successful logon','4624'].includes(raw)) { /* SUCCESS */ }
+      else { skipped++; skipReasons.push('row ' + (i+1) + ' unknown event "' + (r[idx.event]||'') + '"'); continue; }
+    }
+    let finalEvent = eventVal;
+    if (finalEvent !== 'FAILED' && finalEvent !== 'SUCCESS') {
+      const raw = (r[idx.event] || '').trim().toLowerCase();
+      finalEvent = ['fail','failure','failed logon','4625'].includes(raw) ? 'FAILED' : 'SUCCESS';
+    }
+    const ts = parseTimestamp(r[idx.timestamp] || '');
+    if (ts === null) {
+      skipped++; skipReasons.push('row ' + (i+1) + ' invalid timestamp'); continue;
+    }
+    const eid = (r[idx.event_id] || String(i)).trim();
+    if (seenIds.has(eid)) {
+      skipped++; skipReasons.push('row ' + (i+1) + ' duplicate event_id ' + eid); continue;
+    }
+    seenIds.add(eid);
+    events.push({
+      event_id: eid,
+      ts,
+      account: (r[idx.account] || '').trim(),
+      computer: (r[idx.computer] || '').trim(),
+      event: finalEvent,
+      department_case: idx.department_case >= 0 ? (r[idx.department_case] || '').trim() : ''
+    });
+  }
+  events.sort((a, b) => a.ts - b.ts);
+  return { events, skipped, skipReasons };
+}
+
+function addDataset(name, source, events, skipped, skipReasons) {
+  const id = 'ds' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const ds = {
+    id, name, source, events,
+    cases: [], statusMap: {},
+    skipped: skipped || 0,
+    skipReasons: skipReasons || [],
+    importedAt: formatTime(Date.now())
+  };
+  datasets.push(ds);
+  activeDatasetId = id;
+  runDetect();
+  toast('Dataset "' + name + '" added · ' + events.length + ' events');
+  renderDatasetList();
+  return ds;
+}
+
+function importCSVText(text, sourceName) {
+  try {
+    const rows = parseCSV(text);
+    if (rows.length < 2) { showError('File appears empty or has no data rows.'); return; }
+    const headers = rows[0].map(h => h.trim());
+    let idx = autoMapHeaders(headers);
+    const required = ['event_id','timestamp','account','computer','event'];
+    const missing = required.filter(f => idx[f] < 0);
+    if (missing.length) {
+      // Offer interactive mapping
+      pendingMap = { rows, headers, sourceName };
+      showMappingUI(headers, idx);
+      return;
+    }
+    const { events, skipped, skipReasons } = rowsToEvents(rows, idx, sourceName);
+    if (!events.length) { showError('No valid events found after validation.'); return; }
+    const name = sourceName || 'Upload ' + (datasets.length + 1);
+    addDataset(name, sourceName || 'Uploaded CSV', events, skipped, skipReasons);
+    showImportReport(events.length, skipped, skipReasons, rows.length - 1);
+  } catch (err) {
+    showError('Could not parse file: ' + (err.message || 'unknown error'));
+  }
+}
+
+function importJSONText(text, sourceName) {
+  try {
+    let data = JSON.parse(text);
+    if (!Array.isArray(data)) {
+      if (data.events && Array.isArray(data.events)) data = data.events;
+      else if (data.records && Array.isArray(data.records)) data = data.records;
+      else { showError('JSON must be an array of event objects.'); return; }
+    }
+    if (!data.length) { showError('JSON array is empty.'); return; }
+    // Build synthetic CSV-like rows from keys
+    const keys = Object.keys(data[0]);
+    const headers = keys;
+    const rows = [headers];
+    for (const obj of data) {
+      rows.push(keys.map(k => String(obj[k] ?? '')));
+    }
+    let idx = autoMapHeaders(headers);
+    const required = ['timestamp','account','computer','event'];
+    const missing = required.filter(f => idx[f] < 0);
+    if (missing.length) {
+      pendingMap = { rows, headers, sourceName: sourceName || 'JSON upload' };
+      showMappingUI(headers, idx);
+      return;
+    }
+    if (idx.event_id < 0) idx.event_id = -1; // will generate
+    const { events, skipped, skipReasons } = rowsToEvents(rows, idx, sourceName);
+    if (!events.length) { showError('No valid events found in JSON.'); return; }
+    addDataset(sourceName || 'JSON upload', sourceName || 'JSON', events, skipped, skipReasons);
+    showImportReport(events.length, skipped, skipReasons, data.length);
+  } catch (err) {
+    showError('Could not parse JSON: ' + (err.message || 'unknown error'));
+  }
+}
+
+function showMappingUI(headers, autoIdx) {
+  const container = document.getElementById('mapRows');
+  const fields = [
+    { key: 'event_id', label: 'Event ID', required: false },
+    { key: 'timestamp', label: 'Timestamp', required: true },
+    { key: 'account', label: 'Account / User', required: true },
+    { key: 'computer', label: 'Computer / Host', required: true },
+    { key: 'event', label: 'Event type', required: true },
+    { key: 'department_case', label: 'Department', required: false }
+  ];
+  container.innerHTML = fields.map(f => {
+    const opts = headers.map((h, i) =>
+      '<option value="' + i + '"' + (autoIdx[f.key] === i ? ' selected' : '') + '>' + escapeHtml(h) + '</option>'
+    ).join('');
+    return '<div class="map-row"><label>' + f.label + (f.required ? ' *' : '') + '</label>' +
+      '<select data-field="' + f.key + '"><option value="-1">— skip —</option>' + opts + '</select></div>';
+  }).join('');
+  document.getElementById('mapOverlay').classList.add('open');
+}
+
+function showImportReport(valid, skipped, reasons, total) {
+  const msg = total + ' rows read, ' + valid + ' valid events' + (skipped ? ', ' + skipped + ' skipped' : '');
+  const html = '<strong>Import report</strong><br>' + msg +
+    (reasons.length ? '<br>Skipped: ' + escapeHtml(reasons.slice(0, 6).join('; ')) + (reasons.length > 6 ? '…' : '') : '');
+  document.getElementById('importCard').style.display = 'block';
+  document.getElementById('importCard').innerHTML = html;
+  document.getElementById('importCardDs').style.display = 'block';
+  document.getElementById('importCardDs').innerHTML = html;
+}
+
+function loadSample() {
+  importCSVText(SAMPLE_CSV, 'Sample data');
+}
+
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const text = reader.result;
+    if (file.name.toLowerCase().endsWith('.json') || text.trim().startsWith('[') || text.trim().startsWith('{')) {
+      importJSONText(text, file.name);
+    } else {
+      importCSVText(text, file.name);
+    }
+  };
+  reader.onerror = () => showError('Could not read the file.');
+  reader.readAsText(file);
+}
+
+/* ---------- Detect + render ---------- */
+function getOpts() {
+  return {
+    N: params.N, W: params.W, crossWin: params.crossWin,
+    openTime: params.openTime, closeTime: params.closeTime,
+    workingDays: new Set(params.workingDays),
+    satDiff: params.satDiff, satOpen: params.satOpen, satClose: params.satClose
+  };
+}
+
+function runDetect() {
+  const ds = activeDs();
+  if (!ds || !ds.events.length) {
+    if (ds) ds.cases = [];
+    renderAll();
+    return;
+  }
+  const old = { ...prevCounts };
+  ds.cases = detect(ds.events, getOpts());
+  const counts = {
+    priority: ds.cases.filter(c => c.label === 'Priority Review').length,
+    review: ds.cases.filter(c => c.label === 'Review').length,
+    investigate: ds.cases.filter(c => c.label === 'Investigate').length,
+    routine: ds.cases.filter(c => c.label === 'Routine').length
+  };
+  const what = document.getElementById('whatIf');
+  if (old.priority + old.review + old.investigate + old.routine > 0) {
+    const parts = [];
+    const dp = counts.priority - old.priority, dr = counts.review - old.review;
+    const di = counts.investigate - old.investigate, dro = counts.routine - old.routine;
+    if (dp) parts.push((dp > 0 ? 'adds ' : 'removes ') + Math.abs(dp) + ' Priority');
+    if (dr) parts.push((dr > 0 ? 'adds ' : 'removes ') + Math.abs(dr) + ' Review');
+    if (di) parts.push((di > 0 ? 'adds ' : 'removes ') + Math.abs(di) + ' Investigate');
+    if (dro) parts.push((dro > 0 ? 'adds ' : 'removes ') + Math.abs(dro) + ' Routine');
+    what.textContent = parts.length ? 'Change effect: ' + parts.join(', ') + '.' : 'No label changes from last parameter set.';
+  } else what.textContent = '';
+  prevCounts = counts;
+  renderAll();
+}
+
+function renderAll() {
+  const ds = activeDs();
+  const events = ds ? ds.events : [];
+  const cases = ds ? ds.cases : [];
+  const statusMap = ds ? ds.statusMap : {};
+
+  document.getElementById('nEvents').textContent = events.length;
+  document.getElementById('nCases').textContent = cases.length;
+  document.getElementById('nPriority').textContent = cases.filter(c => c.label === 'Priority Review').length;
+  document.getElementById('nReview').textContent = cases.filter(c => c.label === 'Review').length;
+  document.getElementById('nInvestigate').textContent = cases.filter(c => c.label === 'Investigate').length;
+  document.getElementById('nRoutine').textContent = cases.filter(c => c.label === 'Routine').length;
+  document.getElementById('nSkipped').textContent = ds ? ds.skipped : 0;
+  const nrh = document.getElementById('nRiskHigh');
+  if (nrh) nrh.textContent = cases.filter(c => (c.risk || 0) >= 65).length;
+  document.getElementById('dataChip').textContent =
+    !ds ? 'No data' : ds.name + ' · ' + events.length + ' events';
+
+  renderNeeds(cases, statusMap);
+  renderDonut(cases);
+  renderProgress(cases, statusMap);
+  renderTable(cases, statusMap);
+  renderWhyNot(cases);
+  updateHoursSummary();
+  renderDatasetList();
+  if (document.getElementById('page-analytics').classList.contains('active')) renderAnalytics();
+  populateComputerFilter(cases);
+}
+
+function renderNeeds(cases, statusMap) {
+  const list = document.getElementById('needsList');
+  const top = cases.filter(c => c.label !== 'Routine').slice().sort((a,b)=>(b.risk||0)-(a.risk||0)).slice(0, 6);
+  if (!top.length) {
+    list.innerHTML = '<div class="empty-hint" style="padding:1.5rem">No Priority, Review or Investigate cases right now.</div>';
+    return;
+  }
+  list.innerHTML = top.map(c => {
+    const icon = c.label === 'Priority Review' ? '🔴' : c.label === 'Review' ? '🟡' : '🟣';
+    const bc = c.label === 'Priority Review' ? 'badge-priority' : c.label === 'Review' ? 'badge-review' : 'badge-investigate';
+    return '<div class="needs-card"><div class="info"><span class="badge ' + riskClass(c.risk||0) + '">' + (c.risk||0) + ' ' + escapeHtml(c.riskBand||'') + '</span> <span class="badge ' + bc + '">' + icon + ' ' + escapeHtml(c.label) +
+      '</span> <strong>' + escapeHtml(c.account) + '</strong> on ' + escapeHtml(c.computer) +
+      '<br><span style="font-size:.8rem;color:var(--muted)">' + escapeHtml(c.timeSpan) + ' · ' +
+      escapeHtml(c.reasons.join(' + ') || '—') + '</span><br><span style="font-size:.8rem">' +
+      escapeHtml(c.message) + '</span></div><button class="btn btn-sm" data-open="' + c.id + '">Open case</button></div>';
+  }).join('');
+  list.querySelectorAll('[data-open]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      navigate('cases');
+      selectCase(btn.dataset.open);
+    });
+  });
+}
+
+function renderDonut(cases) {
+  const p = cases.filter(c => c.label === 'Priority Review').length;
+  const r = cases.filter(c => c.label === 'Review').length;
+  const inv = cases.filter(c => c.label === 'Investigate').length;
+  const o = cases.filter(c => c.label === 'Routine').length;
+  const total = p + r + inv + o || 1;
+  const svg = `<svg class="chart-svg" viewBox="0 0 120 120" width="120" height="120" aria-label="Label split donut">
+    <circle cx="60" cy="60" r="50" fill="none" stroke="#E8F5E9" stroke-width="16"
+      stroke-dasharray="${(o/total)*314} 314" transform="rotate(-90 60 60)"/>
+    <circle cx="60" cy="60" r="50" fill="none" stroke="#E8EAF6" stroke-width="16"
+      stroke-dasharray="${(inv/total)*314} 314" stroke-dashoffset="${-(o/total)*314}" transform="rotate(-90 60 60)"/>
+    <circle cx="60" cy="60" r="50" fill="none" stroke="#FFF8E1" stroke-width="16"
+      stroke-dasharray="${(r/total)*314} 314" stroke-dashoffset="${-((o+inv)/total)*314}" transform="rotate(-90 60 60)"/>
+    <circle cx="60" cy="60" r="50" fill="none" stroke="#FFEBEE" stroke-width="16"
+      stroke-dasharray="${(p/total)*314} 314" stroke-dashoffset="${-((o+inv+r)/total)*314}" transform="rotate(-90 60 60)"/>
+    <text x="60" y="64" text-anchor="middle" font-size="14" font-weight="700" fill="currentColor">${total}</text>
+  </svg>
+  <div style="font-size:.8rem">
+    <span style="color:var(--priority)">● Priority ${p}</span><br>
+    <span style="color:var(--review)">● Review ${r}</span><br>
+    <span style="color:var(--investigate)">● Investigate ${inv}</span><br>
+    <span style="color:var(--routine)">● Routine ${o}</span>
+  </div>`;
+  document.getElementById('donutChart').innerHTML = svg;
+  document.getElementById('donutTakeaway').textContent =
+    total ? (p + r + inv) + ' of ' + total + ' cases need human attention.' : 'No cases yet.';
+}
+
+function renderProgress(cases, statusMap) {
+  let pend = 0, conf = 0, disc = 0;
+  for (const c of cases) {
+    const st = (statusMap[c.id] || {}).status || 'Pending';
+    if (st === 'Confirmed') conf++;
+    else if (st === 'Dismissed') disc++;
+    else pend++;
+  }
+  const t = pend + conf + disc || 1;
+  document.getElementById('progressChart').innerHTML =
+    '<div class="progress-bar" style="margin:1rem 0">' +
+    '<span style="width:' + (pend/t*100) + '%;background:var(--muted)"></span>' +
+    '<span style="width:' + (conf/t*100) + '%;background:#1565C0"></span>' +
+    '<span style="width:' + (disc/t*100) + '%;background:#9E9E9E"></span></div>' +
+    '<div style="font-size:.8rem">Pending ' + pend + ' · Confirmed ' + conf + ' · Dismissed ' + disc + '</div>';
+  document.getElementById('progressTakeaway').textContent =
+    conf + disc > 0 ? (conf + disc) + ' cases already actioned by a reviewer.' : 'No cases actioned yet.';
+}
+
+/* ---------- Dataset list UI ---------- */
+function renderDatasetList() {
+  const list = document.getElementById('datasetList');
+  if (!datasets.length) {
+    list.innerHTML = '<p style="color:var(--muted);font-size:.85rem">No datasets yet. Upload a CSV/JSON or load sample data.</p>';
+    return;
+  }
+  list.innerHTML = datasets.map(ds => {
+    const active = ds.id === activeDatasetId;
+    const nFlag = ds.cases.filter(c => c.label !== 'Routine').length;
+    return '<div class="dataset-item' + (active ? ' active' : '') + '" data-ds="' + ds.id + '">' +
+      '<div class="ds-name">' + (active ? '▶ ' : '') + escapeHtml(ds.name) + '</div>' +
+      '<div class="ds-meta">' + ds.events.length + ' events · ' + ds.cases.length + ' cases · ' +
+      nFlag + ' flagged · ' + escapeHtml(ds.importedAt) + '</div>' +
+      '<button class="btn btn-sm btn-ghost" data-rename="' + ds.id + '" title="Rename">✎</button>' +
+      '<button class="btn btn-sm btn-ghost btn-danger" data-del="' + ds.id + '" title="Delete">✕</button>' +
+      '</div>';
+  }).join('');
+
+  list.querySelectorAll('.dataset-item').forEach(el => {
+    el.addEventListener('click', e => {
+      if (e.target.closest('[data-del]') || e.target.closest('[data-rename]')) return;
+      switchDataset(el.dataset.ds);
+    });
+  });
+  list.querySelectorAll('[data-del]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const id = btn.dataset.del;
+      if (!confirm('Delete this dataset? Review status will be lost.')) return;
+      datasets = datasets.filter(d => d.id !== id);
+      if (activeDatasetId === id) {
+        activeDatasetId = datasets.length ? datasets[datasets.length - 1].id : null;
+      }
+      runDetect();
+      toast('Dataset removed');
+    });
+  });
+  list.querySelectorAll('[data-rename]').forEach(btn => {
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      const ds = datasets.find(d => d.id === btn.dataset.rename);
+      if (!ds) return;
+      const n = prompt('Rename dataset', ds.name);
+      if (n && n.trim()) { ds.name = n.trim(); renderDatasetList(); renderAll(); }
+    });
+  });
+}
+
+function switchDataset(id) {
+  if (id === activeDatasetId) return;
+  activeDatasetId = id;
+  selectedId = null;
+  closeEvidence();
+  runDetect();
+  toast('Switched to: ' + (activeDs()?.name || id));
+}
+
+/* ---------- Cases table ---------- */
+function filterCases(list) {
+  let out = list;
+  if (currentFilter === 'isolated') out = out.filter(c => c.label === 'Routine' && c.failures.length <= 2);
+  else if (currentFilter === 'r1') out = out.filter(c => c.r1);
+  else if (currentFilter === 'r2') out = out.filter(c => c.r2);
+  else if (currentFilter === 'r3') out = out.filter(c => c.r3);
+  else if (currentFilter === 'r4') out = out.filter(c => c.r4);
+  else if (currentFilter === 'r5') out = out.filter(c => c.r5);
+  else if (currentFilter === 'r7') out = out.filter(c => c.r7);
+  else if (currentFilter === 'highrisk') out = out.filter(c => (c.risk || 0) >= 65);
+  else if (currentFilter === 'whynot') out = [];
+  const q = (document.getElementById('searchBox')?.value || '').toLowerCase();
+  if (q) out = out.filter(c =>
+    c.account.toLowerCase().includes(q) || c.computer.toLowerCase().includes(q) || c.eventIds.includes(q));
+  const fl = document.getElementById('filterLabel')?.value;
+  if (fl) out = out.filter(c => c.label === fl);
+  const ds = activeDs();
+  const statusMap = ds ? ds.statusMap : {};
+  const fs = document.getElementById('filterStatus')?.value;
+  if (fs) out = out.filter(c => ((statusMap[c.id] || {}).status || 'Pending') === fs);
+  const fc = document.getElementById('filterComputer')?.value;
+  if (fc) out = out.filter(c => c.computer.includes(fc));
+  return out;
+}
+
+function renderTable(cases, statusMap) {
+  const tbody = document.getElementById('caseBody');
+  const table = document.getElementById('caseTable');
+  const hint = document.getElementById('emptyHint');
+  const whySec = document.getElementById('whyNotSection');
+  if (currentFilter === 'whynot') {
+    table.style.display = 'none';
+    hint.style.display = 'none';
+    whySec.classList.remove('hidden');
+    return;
+  }
+  whySec.classList.add('hidden');
+  if (!cases.length && !activeDs()) {
+    table.style.display = 'none';
+    hint.style.display = 'block';
+    return;
+  }
+  hint.style.display = 'none';
+  table.style.display = 'table';
+  let list = filterCases(cases);
+  const order = { 'Priority Review': 0, 'Review': 1, 'Investigate': 2, 'Routine': 3 };
+  list = list.slice().sort((a, b) => {
+    let va, vb;
+    if (sortCol === 'risk') { va = a.risk || 0; vb = b.risk || 0; }
+    else if (sortCol === 'label') { va = order[a.label]; vb = order[b.label]; }
+    else if (sortCol === 'account') { va = a.account; vb = b.account; }
+    else if (sortCol === 'computer') { va = a.computer; vb = b.computer; }
+    else if (sortCol === 'time') { va = a.startTs; vb = b.startTs; }
+    else if (sortCol === 'rules') { va = a.reasons.join(); vb = b.reasons.join(); }
+    else if (sortCol === 'status') {
+      va = (statusMap[a.id] || {}).status || 'Pending';
+      vb = (statusMap[b.id] || {}).status || 'Pending';
+    } else { va = 0; vb = 0; }
+    if (va < vb) return -1 * sortDir;
+    if (va > vb) return 1 * sortDir;
+    return 0;
+  });
+  tbody.innerHTML = '';
+  for (const c of list) {
+    const tr = document.createElement('tr');
+    tr.tabIndex = 0;
+    tr.dataset.id = c.id;
+    if (c.id === selectedId) tr.classList.add('selected');
+    const st = (statusMap[c.id] || {}).status || 'Pending';
+    const bc = c.label === 'Priority Review' ? 'badge-priority'
+      : c.label === 'Review' ? 'badge-review'
+      : c.label === 'Investigate' ? 'badge-investigate' : 'badge-routine';
+    const icon = c.label === 'Priority Review' ? '🔴' : c.label === 'Review' ? '🟡' : c.label === 'Investigate' ? '🟣' : '🟢';
+    const risk = c.risk || 0;
+    const rb = c.riskBand || riskBand(risk);
+    tr.innerHTML =
+      '<td><span class="badge ' + riskClass(risk) + '">' + risk + ' ' + escapeHtml(rb) + '</span></td>' +
+      '<td><span class="badge ' + bc + '">' + icon + ' ' + escapeHtml(c.label) + '</span></td>' +
+      '<td>' + escapeHtml(c.account) + '</td>' +
+      '<td>' + escapeHtml(c.computer) + '</td>' +
+      '<td>' + escapeHtml(c.timeSpan) + '</td>' +
+      '<td>' + escapeHtml(c.eventIds) + '</td>' +
+      '<td>' + escapeHtml(c.reasons.length ? c.reasons.join(' + ') : '—') + '</td>' +
+      '<td class="muted-col">' + escapeHtml(c.department) + '</td>' +
+      '<td><span class="status-chip status-' + st.toLowerCase() + '">' + escapeHtml(st) + '</span></td>' +
+      '<td style="font-size:.78rem;max-width:200px">' + escapeHtml(c.message) + '</td>';
+    tr.addEventListener('click', () => selectCase(c.id));
+    tr.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); selectCase(c.id); } });
+    tbody.appendChild(tr);
+  }
+}
+
+function populateComputerFilter(cases) {
+  const sel = document.getElementById('filterComputer');
+  if (!sel) return;
+  const cur = sel.value;
+  const comps = [...new Set(cases.flatMap(c => (c.computers || [c.computer])))].sort();
+  sel.innerHTML = '<option value="">All computers</option>' +
+    comps.map(c => '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>').join('');
+  sel.value = cur;
+}
+
+function selectCase(id) {
+  selectedId = id;
+  document.querySelectorAll('#caseBody tr').forEach(tr => tr.classList.toggle('selected', tr.dataset.id === id));
+  const ds = activeDs();
+  if (!ds) return;
+  const c = ds.cases.find(x => x.id === id);
+  if (c) showEvidence(c);
+}
+
+function showEvidence(c) {
+  const ds = activeDs();
+  const statusMap = ds ? ds.statusMap : {};
+  document.getElementById('evOverlay').classList.add('open');
+  document.getElementById('evDrawer').classList.add('open');
+  const evs = c.events;
+  const t0 = evs[0].ts, t1 = evs[evs.length - 1].ts;
+  const span = Math.max(t1 - t0, 60000);
+  let dots = '';
+  for (const e of evs) {
+    const pct = ((e.ts - t0) / span) * 100;
+    dots += '<div class="timeline-dot ' + (e.event === 'FAILED' ? 'dot-fail' : 'dot-success') +
+      '" style="left:' + pct + '%" title="' + escapeHtml(e.event + ' ' + formatShort(e.ts)) + '"></div>';
+  }
+  let win = '';
+  if (c.success && (c.r1 || c.r5)) {
+    const wMs = params.W * 60 * 1000;
+    const winStart = Math.max(t0, (c.success ? c.success.ts : t1) - wMs);
+    const left = ((winStart - t0) / span) * 100;
+    const width = (((c.success ? c.success.ts : t1) - winStart) / span) * 100;
+    win = '<div class="timeline-window" style="left:' + left + '%;width:' + Math.max(width, 2) + '%"></div>';
+  }
+  let hoursHtml = '';
+  if (c.success) {
+    const inside = isInsideLabHours(c.success.ts, getOpts());
+    hoursHtml = '<div class="hours-marker ' + (inside ? 'hours-in' : 'hours-out') + '">' +
+      (inside ? '✓ Inside lab hours' : '✗ Outside lab hours / non-working day') + '</div>';
+  }
+
+  // Evidence-to-Action explanations
+  let why = '';
+  if (c.r1) {
+    why += '<div class="why-block"><strong>R1 — Failure burst then success</strong>' +
+      c.failuresInW.length + ' failure' + (c.failuresInW.length === 1 ? '' : 's') +
+      ' within the last ' + params.W + ' minutes before this success (threshold N = ' + params.N + ').</div>';
+  }
+  if (c.r2) {
+    why += '<div class="why-block"><strong>R2 — After-hours success</strong>' +
+      'The successful login occurred outside configured lab open/close times or on a non-working day.</div>';
+  }
+  if (c.r3) {
+    why += '<div class="why-block"><strong>R3 — Cross-computer activity</strong>' +
+      'Account seen on ' + (c.computers ? c.computers.length : '?') + ' computers (' +
+      escapeHtml(c.computer) + ') within ' + params.crossWin + ' minutes. ' +
+      'Possible distributed password guessing or shared credentials.</div>';
+  }
+  if (c.r5) {
+    why += '<div class="why-block"><strong>R5 — Failure burst without success</strong>' +
+      (c.failuresInW.length || c.failures.length) + ' failed attempts within ' + params.W +
+      ' minutes and no successful login. No access gained does not mean no threat.</div>';
+  }
+  if (c.r4) {
+    why += '<div class="why-block"><strong>R4 — Slow-burn repeated failures</strong>' +
+      'Many failures spread over a longer period without a short burst of N within W minutes. Possible deliberate slow guessing.</div>';
+  }
+  if (c.r7) {
+    why += '<div class="why-block"><strong>R7 — Password spray shape</strong>' +
+      'Several distinct accounts each failed a small number of times on the same computer in a short window.</div>';
+  }
+  if (!c.r1 && !c.r2 && !c.r3 && !c.r4 && !c.r5 && !c.r7) {
+    why += '<div class="why-block"><strong>Routine</strong>' + escapeHtml(c.message) + '</div>';
+  }
+
+  // Recommended checks
+  let checks = [];
+  if (c.r1) checks.push('Was this person the genuine account holder who forgot their password?');
+  if (c.r2) checks.push('Was this after-hours login authorized or scheduled?');
+  if (c.r3) checks.push('Did the user legitimately move between these machines, or is credential sharing / remote guessing involved?');
+  if (c.r5) checks.push('Is this account being targeted? Check for similar bursts on other accounts or computers.');
+  if (!checks.length) checks.push('No further action required for this routine case.');
+
+  const rulePills = c.reasons.length
+    ? '<div class="rule-pills">' + c.reasons.map(r => '<span class="rule-pill">' + r + '</span>').join('') + '</div>'
+    : '';
+
+  const stInfo = statusMap[c.id] || {};
+  const st = stInfo.status || 'Pending';
+
+  document.getElementById('evContent').innerHTML =
+    '<div style="font-size:.85rem;margin-bottom:.4rem"><strong>' + escapeHtml(c.account) +
+    '</strong> on <strong>' + escapeHtml(c.computer) + '</strong></div>' +
+    rulePills +
+    '<div style="font-size:.78rem;color:var(--muted)">Event IDs: ' + escapeHtml(c.eventIds) +
+    '<br>Time span: ' + escapeHtml(c.timeSpan) +
+    '<br>Evidence: ' + c.events.length + ' event' + (c.events.length === 1 ? '' : 's') + '</div>' +
+    '<div class="timeline"><div class="timeline-track">' + win + dots + '</div>' +
+    '<div class="timeline-labels"><span>' + escapeHtml(formatShort(evs[0].ts)) + '</span><span>' +
+    escapeHtml(formatShort(evs[evs.length-1].ts)) + '</span></div>' + hoursHtml + '</div>' +
+    '<div style="margin:.6rem 0"><strong>Risk score: ' + (c.risk||0) + ' / 100</strong> · <span class="badge ' + riskClass(c.risk||0) + '">' + escapeHtml(c.riskBand||riskBand(c.risk||0)) + '</span></div>' +
+    '<div class="risk-meter"><span style="width:' + (c.risk||0) + '%;background:' + ((c.risk||0)>=85?'var(--priority)':(c.risk||0)>=65?'#E65100':(c.risk||0)>=40?'var(--review)':'var(--routine)') + '"></span></div>' +
+    '<ul class="risk-breakdown">' + (c.riskParts||[]).map(function(p){return '<li>+' + p.v + ' · ' + escapeHtml(p.k) + '</li>';}).join('') + '</ul>' +
+    '<div class="ai-box"><strong>AI risk summary</strong>' + escapeHtml(c.aiSummary || '') + '</div>' +
+    '<h4 style="font-size:.9rem;margin-top:.5rem">Why was this flagged?</h4>' +
+    why +
+    '<div class="check-q"><strong>Recommended next checks</strong><ul style="margin:.3rem 0 0 1.1rem">' +
+    checks.map(q => '<li>' + escapeHtml(q) + '</li>').join('') + '</ul></div>' +
+    '<label style="font-size:.8rem;color:var(--muted)">Reviewer note (optional)</label>' +
+    '<textarea class="note-box" id="reviewerNote" placeholder="Optional note…">' + escapeHtml(stInfo.note || '') + '</textarea>' +
+    '<div class="ev-actions">' +
+    '<button class="btn btn-sm" id="btnConfirm">Confirm for follow-up</button>' +
+    '<button class="btn btn-sm btn-ghost" id="btnDismiss">Dismiss as expected</button></div>' +
+    '<div style="margin-top:.6rem;font-size:.78rem">Status: <span class="status-chip status-' +
+    st.toLowerCase() + '">' + escapeHtml(st) + '</span>' +
+    (stInfo.reviewer ? ' · by ' + escapeHtml(stInfo.reviewer) + ' at ' + escapeHtml(stInfo.ts) : '') + '</div>';
+
+  document.getElementById('btnConfirm').onclick = () => {
+    statusMap[c.id] = {
+      status: 'Confirmed',
+      reviewer: session ? session.name : 'unknown',
+      ts: formatTime(Date.now()),
+      note: document.getElementById('reviewerNote').value
+    };
+    renderAll();
+    showEvidence(c);
+    toast('Confirmed for follow-up');
+  };
+  document.getElementById('btnDismiss').onclick = () => {
+    statusMap[c.id] = {
+      status: 'Dismissed',
+      reviewer: session ? session.name : 'unknown',
+      ts: formatTime(Date.now()),
+      note: document.getElementById('reviewerNote').value
+    };
+    renderAll();
+    showEvidence(c);
+    toast('Dismissed as expected');
+  };
+}
+
+function closeEvidence() {
+  document.getElementById('evOverlay').classList.remove('open');
+  document.getElementById('evDrawer').classList.remove('open');
+  selectedId = null;
+}
+
+function renderWhyNot(cases) {
+  const body = document.getElementById('whyNotBody');
+  const routine = cases.filter(c => c.label === 'Routine');
+  if (!routine.length) { body.innerHTML = '<p style="color:var(--muted)">No routine cases.</p>'; return; }
+  const groups = new Map();
+  for (const c of routine) {
+    if (!groups.has(c.message)) groups.set(c.message, []);
+    groups.get(c.message).push(c);
+  }
+  let html = '';
+  for (const [msg, list] of groups) {
+    html += '<div class="why-group"><h4>' + escapeHtml(msg) + '</h4><ul>';
+    for (const c of list) {
+      html += '<li>' + escapeHtml(c.account) + ' / ' + escapeHtml(c.computer) +
+        ' — events ' + escapeHtml(c.eventIds) + '</li>';
+    }
+    html += '</ul></div>';
+  }
+  body.innerHTML = html;
+}
+
+/* ---------- Analytics ---------- */
+function barChart(data, labels, colors, height) {
+  const max = Math.max(...data, 1);
+  const w = Math.max(labels.length * 28, 200);
+  const h = height || 140;
+  const barW = Math.min(20, (w / labels.length) * 0.6);
+  let bars = '';
+  data.forEach((v, i) => {
+    const bh = (v / max) * (h - 30);
+    const x = (i + 0.5) * (w / labels.length) - barW / 2;
+    bars += '<rect x="' + x + '" y="' + (h - 20 - bh) + '" width="' + barW + '" height="' + bh +
+      '" fill="' + (colors[i] || 'var(--teal)') + '" rx="2"/>';
+    bars += '<text x="' + (x + barW / 2) + '" y="' + (h - 6) + '" text-anchor="middle" font-size="9" fill="currentColor">' +
+      escapeHtml(String(labels[i]).slice(0, 5)) + '</text>';
+  });
+  return '<svg class="chart-svg" viewBox="0 0 ' + w + ' ' + h + '" width="100%" height="' + h + '">' + bars + '</svg>';
+}
+
+function renderAnalytics() {
+  const ds = activeDs();
+  if (!ds || !ds.events.length) {
+    ['chartHour','chartAccount','chartRule','chartComputer','chartHeat','chartSens'].forEach(id => {
+      document.getElementById(id).innerHTML = '<p style="color:var(--muted);font-size:.85rem">Load data to see charts.</p>';
+    });
+    return;
+  }
+  const rawEvents = ds.events;
+  const cases = ds.cases;
+
+  const hours = new Array(24).fill(0);
+  rawEvents.forEach(e => { hours[new Date(e.ts).getUTCHours()]++; });
+  const openM = timeToMinutes(params.openTime), closeM = timeToMinutes(params.closeTime);
+  document.getElementById('chartHour').innerHTML = barChart(hours, hours.map((_, i) => i), hours.map((_, i) => {
+    const m = i * 60;
+    return (m >= openM && m <= closeM) ? 'var(--teal)' : '#C62828';
+  }), 150);
+  const afterH = hours.reduce((s, v, i) => s + ((i * 60 < openM || i * 60 > closeM) ? v : 0), 0);
+  document.getElementById('takeHour').textContent =
+    afterH + ' events fall outside the default lab-hours band (shown in red).';
+
+  const byAcc = {};
+  rawEvents.forEach(e => {
+    if (!byAcc[e.account]) byAcc[e.account] = { f: 0, s: 0 };
+    if (e.event === 'FAILED') byAcc[e.account].f++; else byAcc[e.account].s++;
+  });
+  const accs = Object.keys(byAcc).sort();
+  const fails = accs.map(a => byAcc[a].f), succs = accs.map(a => byAcc[a].s);
+  const maxA = Math.max(...fails.map((f, i) => f + succs[i]), 1);
+  const wA = Math.max(accs.length * 36, 220), hA = 150;
+  let aBars = '';
+  accs.forEach((a, i) => {
+    const x = (i + 0.5) * (wA / accs.length) - 10;
+    const hf = (fails[i] / maxA) * 110, hs = (succs[i] / maxA) * 110;
+    aBars += '<rect x="' + x + '" y="' + (hA - 20 - hf) + '" width="18" height="' + hf + '" fill="var(--priority)" rx="1"/>';
+    aBars += '<rect x="' + x + '" y="' + (hA - 20 - hf - hs) + '" width="18" height="' + hs + '" fill="var(--routine)" rx="1"/>';
+    aBars += '<text x="' + (x + 9) + '" y="' + (hA - 5) + '" text-anchor="middle" font-size="8" fill="currentColor">' +
+      escapeHtml(a.split('.')[0].slice(0, 5)) + '</text>';
+  });
+  document.getElementById('chartAccount').innerHTML =
+    '<svg class="chart-svg" viewBox="0 0 ' + wA + ' ' + hA + '" width="100%" height="' + hA + '">' + aBars + '</svg>' +
+    '<div style="font-size:.75rem;margin-top:.3rem"><span style="color:var(--priority)">● Failed</span> <span style="color:var(--routine)">● Success</span></div>';
+  document.getElementById('takeAccount').textContent = 'Accounts with many failures relative to successes may need closer review.';
+
+  const r1o = cases.filter(c => c.r1 && !c.r2 && !c.r3 && !c.r5).length;
+  const r2o = cases.filter(c => c.r2 && !c.r1).length;
+  const r3o = cases.filter(c => c.r3).length;
+  const r5o = cases.filter(c => c.r5).length;
+  const both = cases.filter(c => c.r1 && c.r2).length;
+  const none = cases.filter(c => !c.r1 && !c.r2 && !c.r3 && !c.r5).length;
+  document.getElementById('chartRule').innerHTML = barChart(
+    [r1o, r2o, r3o, r5o, both, none],
+    ['R1', 'R2', 'R3', 'R5', 'R1+R2', 'None'],
+    ['var(--review)', 'var(--review)', 'var(--investigate)', 'var(--review)', 'var(--priority)', 'var(--routine)'], 140);
+  document.getElementById('takeRule').textContent =
+    'R1: ' + r1o + ' · R2: ' + r2o + ' · R3: ' + r3o + ' · R5: ' + r5o + ' · both: ' + both + ' · none: ' + none;
+
+  const byComp = {};
+  rawEvents.forEach(e => { byComp[e.computer] = (byComp[e.computer] || 0) + 1; });
+  const comps = Object.keys(byComp).sort();
+  document.getElementById('chartComputer').innerHTML = barChart(
+    comps.map(c => byComp[c]), comps, comps.map(() => 'var(--teal)'), 140);
+  document.getElementById('takeComputer').textContent =
+    comps.length ? 'Most active: ' + comps.reduce((a, b) => byComp[a] > byComp[b] ? a : b) : '';
+
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const heat = Array.from({ length: 7 }, () => new Array(24).fill(0));
+  rawEvents.forEach(e => {
+    const d = new Date(e.ts);
+    heat[d.getUTCDay()][d.getUTCHours()]++;
+  });
+  const maxH = Math.max(...heat.flat(), 1);
+  let hm = '<div class="heatmap"><div></div>';
+  for (let h = 0; h < 24; h++) hm += '<div class="hm-label" style="justify-content:center;font-size:.55rem">' + h + '</div>';
+  for (let d = 0; d < 7; d++) {
+    hm += '<div class="hm-label">' + days[d] + '</div>';
+    for (let h = 0; h < 24; h++) {
+      const v = heat[d][h];
+      const alpha = v / maxH;
+      hm += '<div class="hm-cell" style="background:rgba(15,163,163,' + alpha.toFixed(2) + ')" title="' +
+        days[d] + ' ' + h + ':00 — ' + v + ' events"></div>';
+    }
+  }
+  hm += '</div>';
+  document.getElementById('chartHeat').innerHTML = hm;
+  document.getElementById('takeHeat').textContent = 'Darker cells = more events. Look for activity outside working days or hours.';
+
+  const sensP = [], sensR = [];
+  for (let n = 1; n <= 10; n++) {
+    const tmp = detect(rawEvents, { ...getOpts(), N: n });
+    sensP.push(tmp.filter(c => c.label === 'Priority Review').length);
+    sensR.push(tmp.filter(c => c.label === 'Review' || c.label === 'Investigate').length);
+  }
+  const maxS = Math.max(...sensP, ...sensR, 1);
+  const wS = 320, hS = 150;
+  let sBars = '';
+  for (let i = 0; i < 10; i++) {
+    const x = (i + 0.5) * (wS / 10) - 8;
+    const hp = (sensP[i] / maxS) * 100, hr = (sensR[i] / maxS) * 100;
+    sBars += '<rect x="' + x + '" y="' + (hS - 20 - hp) + '" width="7" height="' + hp + '" fill="var(--priority)"/>';
+    sBars += '<rect x="' + (x + 8) + '" y="' + (hS - 20 - hr) + '" width="7" height="' + hr + '" fill="var(--review)"/>';
+    sBars += '<text x="' + (x + 7) + '" y="' + (hS - 5) + '" text-anchor="middle" font-size="9" fill="currentColor">' + (i + 1) + '</text>';
+    if (i + 1 === params.N) {
+      sBars += '<rect x="' + (x - 2) + '" y="5" width="20" height="' + (hS - 25) +
+        '" fill="none" stroke="var(--teal)" stroke-width="1.5" stroke-dasharray="3"/>';
+    }
+  }
+  document.getElementById('chartSens').innerHTML =
+    '<svg class="chart-svg" viewBox="0 0 ' + wS + ' ' + hS + '" width="100%" height="' + hS + '">' + sBars + '</svg>' +
+    '<div style="font-size:.75rem"><span style="color:var(--priority)">● Priority</span> <span style="color:var(--review)">● Review/Investigate</span> · dashed = current N</div>';
+}
+
+/* ---------- Report ---------- */
+function generateReport() {
+  navigate('report');
+  const ds = activeDs();
+  if (!ds) { document.getElementById('reportContent').innerHTML = '<p>No data.</p>'; return; }
+  const cases = ds.cases;
+  const statusMap = ds.statusMap;
+  const now = formatTime(Date.now());
+  const flagged = cases.filter(c => c.label !== 'Routine');
+  const routine = cases.filter(c => c.label === 'Routine');
+  let rows = '';
+  for (const c of flagged) {
+    const st = (statusMap[c.id] || {}).status || 'Pending';
+    let q = '';
+    if (c.r1 && c.r2) q = 'Genuine account holder who forgot password? After-hours login authorized?';
+    else if (c.r1) q = 'Genuine account holder who forgot password?';
+    else if (c.r2) q = 'After-hours login authorized or scheduled?';
+    else if (c.r3) q = 'Legitimate multi-machine use or distributed guessing?';
+    else if (c.r5) q = 'Is this account under attack?';
+    else q = 'Review evidence.';
+    rows += '<tr><td>' + escapeHtml(c.label) + '</td><td>' + escapeHtml(c.account) + '</td><td>' +
+      escapeHtml(c.computer) + '</td><td>' + escapeHtml(c.timeSpan) + '</td><td>' +
+      escapeHtml(c.eventIds) + '</td><td>' + escapeHtml(c.reasons.join('+')) + '</td><td>' +
+      escapeHtml(q) + '</td><td>' + escapeHtml(st) + '</td></tr>';
+  }
+  const reasonGroups = new Map();
+  routine.forEach(c => {
+    if (!reasonGroups.has(c.message)) reasonGroups.set(c.message, 0);
+    reasonGroups.set(c.message, reasonGroups.get(c.message) + 1);
+  });
+  let cleared = '';
+  for (const [msg, n] of reasonGroups) cleared += '<li>' + n + ' — ' + escapeHtml(msg) + '</li>';
+
+  document.getElementById('reportContent').innerHTML =
+    '<h1>LabTrace Review Report</h1>' +
+    '<div class="meta">Generated: ' + escapeHtml(now) + '<br>Dataset: ' + escapeHtml(ds.name) +
+    ' · ' + ds.events.length + ' events, ' + ds.skipped + ' skipped<br>' +
+    'Thresholds: N = ' + params.N + ', W = ' + params.W + ' min, cross-window = ' + params.crossWin +
+    ' min · Lab hours: ' + params.openTime + '–' + params.closeTime + ' · Days: ' +
+    [...params.workingDays].sort().map(d => ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ') +
+    '<br>Reviewer: ' + escapeHtml(session ? session.name : '—') + ' (' + escapeHtml(session ? session.role : '') + ')</div>' +
+    '<p><strong>Summary:</strong> ' + cases.length + ' cases · ' +
+    cases.filter(c => c.label === 'Priority Review').length + ' Priority · ' +
+    cases.filter(c => c.label === 'Review').length + ' Review · ' +
+    cases.filter(c => c.label === 'Investigate').length + ' Investigate · ' +
+    routine.length + ' Routine</p>' +
+    '<h2 style="font-size:1.1rem;margin-top:1.25rem">Priority, Review &amp; Investigate cases</h2>' +
+    (flagged.length ? '<table><thead><tr><th>Label</th><th>Account</th><th>Computer</th><th>Time span</th><th>Event IDs</th><th>Rules</th><th>Human check</th><th>Status</th></tr></thead><tbody>' +
+    rows + '</tbody></table>' : '<p>None.</p>') +
+    '<h2 style="font-size:1.1rem;margin-top:1.25rem">Cleared as routine</h2><ul>' + cleared + '</ul>' +
+    '<p style="margin-top:2rem;border-top:1px solid #ccc;padding-top:1rem">Sign-off: ________________________ Date: ________</p>' +
+    '<p style="font-size:.8rem;color:#666;margin-top:1rem">LabTrace prioritizes review. It never accuses anyone and never blocks an account. A human decides.</p>';
+}
+
+/* ---------- Navigation ---------- */
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const el = document.getElementById('page-' + page);
+  if (el) el.classList.add('active');
+  const nav = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (nav) nav.classList.add('active');
+  const titles = { dashboard: 'Dashboard', cases: 'Cases', datasets: 'Datasets', analytics: 'Analytics', help: 'Help', report: 'Report' };
+  document.getElementById('pageTitle').textContent = titles[page] || page;
+  if (page === 'analytics') renderAnalytics();
+  if (page === 'datasets') renderDatasetList();
+}
+
+/* ---------- Settings helpers ---------- */
+function updateHoursSummary() {
+  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const selected = [...params.workingDays].sort((a, b) => a - b).map(d => days[d]);
+  let s = 'Lab open ';
+  if (!selected.length) s += '(no days selected)';
+  else s += selected.join(', ') + ', ' + params.openTime + ' to ' + params.closeTime;
+  if (params.satDiff) s += ' · Sat ' + params.satOpen + '–' + params.satClose;
+  s += ' · Cross-computer window: ' + params.crossWin + ' min';
+  document.getElementById('hoursSummary').textContent = s;
+  document.getElementById('warnDays').classList.toggle('hidden', params.workingDays.size > 0);
+}
+
+function syncDayChips() {
+  document.querySelectorAll('.day-chip').forEach(chip => {
+    const d = +chip.dataset.day;
+    chip.setAttribute('aria-pressed', params.workingDays.has(d) ? 'true' : 'false');
+  });
+  updateHoursSummary();
+}
+
+/* ---------- Replay ---------- */
+let replayTimer = null, replayPaused = false, replayStep = 0, replayStart = 0, replayPauseAccum = 0, replayPauseAt = 0;
+const REPLAY_STEPS = [
+  { t: 0, caption: 'Shared lab logins generate many events. Supervisors need clear, explainable review — not opaque alerts.' },
+  { t: 8, caption: 'LabTrace imports CSV or JSON of Windows login events entirely in the browser. Multiple datasets stay available.' },
+  { t: 16, action: () => { loadSample(); navigate('dashboard'); }, caption: 'Sample data loaded. Events → cases with R1–R5 rules.' },
+  { t: 26, action: () => {
+      navigate('cases');
+      const ds = activeDs();
+      const c = ds?.cases.find(x => x.account === 'r.priya');
+      if (c) selectCase(c.id);
+    }, caption: 'Routine: r.priya had a single failure then success — cleared with a clear reason.' },
+  { t: 38, action: () => {
+      const ds = activeDs();
+      const c = ds?.cases.find(x => x.account === 'guest_lab' && x.r1);
+      if (c) selectCase(c.id);
+    }, caption: 'R1: guest_lab — 3 failures in a short window then success.' },
+  { t: 50, action: () => {
+      const ds = activeDs();
+      const c = ds?.cases.find(x => x.account === 'u.cross' && x.r3);
+      if (c) selectCase(c.id);
+    }, caption: 'R3 (new): u.cross failed on PC-01, PC-02, PC-03 then succeeded — cross-computer pattern.' },
+  { t: 64, action: () => {
+      const ds = activeDs();
+      const c = ds?.cases.find(x => x.account === 'brute.no' && x.r5);
+      if (c) selectCase(c.id);
+    }, caption: 'R5 (new): brute.no — 5 failures, no success. Still a review candidate.' },
+  { t: 78, action: () => {
+      const ds = activeDs();
+      const c = ds?.cases.find(x => x.account === 'x.user');
+      if (c) selectCase(c.id);
+    }, caption: 'Priority: x.user — failure burst AND after-hours. Human review required.' },
+  { t: 92, action: () => {
+      params.N = 2;
+      document.getElementById('sliderN').value = 2;
+      document.getElementById('valN').textContent = 2;
+      runDetect();
+      navigate('dashboard');
+    }, caption: 'Live what-if: lowering N to 2 updates labels immediately.' },
+  { t: 108, caption: 'Explain everything. Accuse no one. Block nothing. Switch datasets anytime. A human decides.' }
+];
+
+function startReplay() {
+  stopReplay();
+  document.getElementById('replayOverlay').classList.add('active');
+  replayStep = 0; replayPaused = false; replayPauseAccum = 0;
+  document.getElementById('replayPause').textContent = 'Pause';
+  params = { N: 3, W: 5, crossWin: 30, openTime: '08:30', closeTime: '17:30', workingDays: new Set([1,2,3,4,5]), satDiff: false, satOpen: '09:00', satClose: '13:00' };
+  document.getElementById('sliderN').value = 3; document.getElementById('valN').textContent = 3;
+  document.getElementById('sliderW').value = 5; document.getElementById('valW').textContent = 5;
+  document.getElementById('sliderCross').value = 30; document.getElementById('valCross').textContent = 30;
+  document.getElementById('openTime').value = '08:30'; document.getElementById('closeTime').value = '17:30';
+  syncDayChips();
+  document.getElementById('replayCaption').textContent = REPLAY_STEPS[0].caption;
+  replayStart = Date.now();
+  function tick() {
+    if (replayPaused) { replayTimer = requestAnimationFrame(tick); return; }
+    const elapsed = (Date.now() - replayStart - replayPauseAccum) / 1000;
+    document.getElementById('replayBar').style.width = Math.min(100, (elapsed / 120) * 100) + '%';
+    while (replayStep < REPLAY_STEPS.length && elapsed >= REPLAY_STEPS[replayStep].t) {
+      const s = REPLAY_STEPS[replayStep];
+      document.getElementById('replayCaption').textContent = s.caption;
+      if (s.action) s.action();
+      replayStep++;
+    }
+    if (elapsed >= 120) { stopReplay(); return; }
+    replayTimer = requestAnimationFrame(tick);
+  }
+  replayTimer = requestAnimationFrame(tick);
+}
+
+function stopReplay() {
+  if (replayTimer) cancelAnimationFrame(replayTimer);
+  replayTimer = null;
+  document.getElementById('replayOverlay').classList.remove('active');
+  closeEvidence();
+}
+
+/* ---------- Boot ---------- */
+document.addEventListener('DOMContentLoaded', async () => {
+  await initHashes();
+
+  document.getElementById('loginBtn').addEventListener('click', tryLogin);
+  document.getElementById('loginPw').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  document.getElementById('loginUser').addEventListener('keydown', e => { if (e.key === 'Enter') tryLogin(); });
+  document.getElementById('togglePw').addEventListener('click', () => {
+    const inp = document.getElementById('loginPw');
+    const show = inp.type === 'password';
+    inp.type = show ? 'text' : 'password';
+    document.getElementById('togglePw').textContent = show ? 'Hide' : 'Show';
+  });
+  document.getElementById('fillDemo').addEventListener('click', () => {
+    document.getElementById('loginUser').value = 'admin';
+    document.getElementById('loginPw').value = 'LabTrace@2026';
+  });
+
+  const saved = loadSession();
+  if (saved) { session = saved; enterApp(); }
+
+  document.querySelectorAll('.nav-item').forEach(btn => {
+    btn.addEventListener('click', () => navigate(btn.dataset.page));
+  });
+
+  document.getElementById('btnUpload').addEventListener('click', () => document.getElementById('fileInput').click());
+  document.getElementById('btnUpload2').addEventListener('click', () => document.getElementById('fileInput').click());
+  document.getElementById('fileInput').addEventListener('change', e => {
+    handleFile(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('btnSample').addEventListener('click', loadSample);
+  document.getElementById('btnSample2').addEventListener('click', loadSample);
+  document.getElementById('btnReplay').addEventListener('click', startReplay);
+  document.getElementById('btnLogout').addEventListener('click', logout);
+  document.getElementById('themeToggle').addEventListener('click', () => {
+    const cur = document.documentElement.getAttribute('data-theme');
+    document.documentElement.setAttribute('data-theme', cur === 'dark' ? '' : 'dark');
+  });
+  document.getElementById('btnSettings').addEventListener('click', () => {
+    document.getElementById('settingsOverlay').classList.add('open');
+    document.getElementById('settingsDrawer').classList.add('open');
+  });
+  document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
+  document.getElementById('settingsOverlay').addEventListener('click', closeSettings);
+  function closeSettings() {
+    document.getElementById('settingsOverlay').classList.remove('open');
+    document.getElementById('settingsDrawer').classList.remove('open');
+  }
+
+  document.getElementById('btnClearAll').addEventListener('click', () => {
+    if (!datasets.length) return;
+    if (!confirm('Clear ALL datasets? This cannot be undone.')) return;
+    datasets = [];
+    activeDatasetId = null;
+    selectedId = null;
+    closeEvidence();
+    renderAll();
+    toast('All datasets cleared');
+  });
+
+  // Mapping modal
+  document.getElementById('btnMapConfirm').addEventListener('click', () => {
+    if (!pendingMap) return;
+    const selects = document.querySelectorAll('#mapRows select');
+    const idx = {};
+    selects.forEach(s => { idx[s.dataset.field] = +s.value; });
+    const required = ['timestamp','account','computer','event'];
+    for (const f of required) {
+      if (idx[f] < 0) { showError('Please map the required field: ' + f); return; }
+    }
+    const { events, skipped, skipReasons } = rowsToEvents(pendingMap.rows, idx, pendingMap.sourceName);
+    document.getElementById('mapOverlay').classList.remove('open');
+    pendingMap = null;
+    if (!events.length) { showError('No valid events after mapping.'); return; }
+    addDataset(pendingMap?.sourceName || 'Mapped upload', 'Mapped CSV/JSON', events, skipped, skipReasons);
+    showImportReport(events.length, skipped, skipReasons, events.length + skipped);
+  });
+  document.getElementById('btnMapCancel').addEventListener('click', () => {
+    document.getElementById('mapOverlay').classList.remove('open');
+    pendingMap = null;
+  });
+
+  // Settings
+  document.getElementById('sliderN').addEventListener('input', e => {
+    params.N = +e.target.value;
+    document.getElementById('valN').textContent = params.N;
+    runDetect();
+  });
+  document.getElementById('sliderW').addEventListener('input', e => {
+    params.W = +e.target.value;
+    document.getElementById('valW').textContent = params.W;
+    runDetect();
+  });
+  document.getElementById('sliderCross').addEventListener('input', e => {
+    params.crossWin = +e.target.value;
+    document.getElementById('valCross').textContent = params.crossWin;
+    runDetect();
+  });
+  document.getElementById('openTime').addEventListener('change', e => { params.openTime = e.target.value; runDetect(); });
+  document.getElementById('closeTime').addEventListener('change', e => { params.closeTime = e.target.value; runDetect(); });
+  document.getElementById('satDiff').addEventListener('change', e => {
+    params.satDiff = e.target.checked;
+    document.getElementById('satHours').classList.toggle('hidden', !params.satDiff);
+    runDetect();
+  });
+  document.getElementById('satOpen').addEventListener('change', e => { params.satOpen = e.target.value; runDetect(); });
+  document.getElementById('satClose').addEventListener('change', e => { params.satClose = e.target.value; runDetect(); });
+
+  document.querySelectorAll('.day-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const d = +chip.dataset.day;
+      if (params.workingDays.has(d)) params.workingDays.delete(d);
+      else params.workingDays.add(d);
+      syncDayChips();
+      runDetect();
+    });
+  });
+  document.querySelectorAll('[data-preset]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const p = btn.dataset.preset;
+      if (p === 'mf') params.workingDays = new Set([1,2,3,4,5]);
+      else if (p === 'ms') params.workingDays = new Set([1,2,3,4,5,6]);
+      else if (p === 'all') params.workingDays = new Set([0,1,2,3,4,5,6]);
+      else params.workingDays = new Set();
+      syncDayChips();
+      runDetect();
+    });
+  });
+  document.getElementById('btnReset').addEventListener('click', () => {
+    params = { N: 3, W: 5, crossWin: 30, openTime: '08:30', closeTime: '17:30', workingDays: new Set([1,2,3,4,5]), satDiff: false, satOpen: '09:00', satClose: '13:00' };
+    document.getElementById('sliderN').value = 3; document.getElementById('valN').textContent = 3;
+    document.getElementById('sliderW').value = 5; document.getElementById('valW').textContent = 5;
+    document.getElementById('sliderCross').value = 30; document.getElementById('valCross').textContent = 30;
+    document.getElementById('openTime').value = '08:30'; document.getElementById('closeTime').value = '17:30';
+    document.getElementById('satDiff').checked = false;
+    document.getElementById('satHours').classList.add('hidden');
+    syncDayChips();
+    runDetect();
+  });
+
+  document.querySelectorAll('#page-cases .tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('#page-cases .tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      currentFilter = tab.dataset.filter;
+      const ds = activeDs();
+      renderTable(ds ? ds.cases : [], ds ? ds.statusMap : {});
+    });
+  });
+  ['searchBox','filterLabel','filterStatus','filterComputer'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => { const ds = activeDs(); renderTable(ds ? ds.cases : [], ds ? ds.statusMap : {}); });
+      el.addEventListener('change', () => { const ds = activeDs(); renderTable(ds ? ds.cases : [], ds ? ds.statusMap : {}); });
+    }
+  });
+  document.querySelectorAll('#caseTable th[data-sort]').forEach(th => {
+    th.addEventListener('click', () => {
+      const col = th.dataset.sort;
+      if (sortCol === col) sortDir *= -1;
+      else { sortCol = col; sortDir = 1; }
+      const ds = activeDs();
+      renderTable(ds ? ds.cases : [], ds ? ds.statusMap : {});
+    });
+  });
+
+  document.getElementById('btnCloseEv').addEventListener('click', closeEvidence);
+  document.getElementById('evOverlay').addEventListener('click', closeEvidence);
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      closeEvidence();
+      closeSettings();
+      stopReplay();
+      document.getElementById('mapOverlay').classList.remove('open');
+    }
+  });
+
+  document.getElementById('btnExport').addEventListener('click', () => {
+    const ds = activeDs();
+    if (!ds || !ds.cases.length) { toast('No cases to export.'); return; }
+    let csv = 'label,account,computer,time_span,event_ids,rules,department,status,reviewer,message\n';
+    for (const c of ds.cases) {
+      const st = ds.statusMap[c.id] || {};
+      const row = [c.label, c.account, c.computer, c.timeSpan, c.eventIds,
+        c.reasons.join('+'), c.department, st.status || 'Pending', st.reviewer || '', c.message]
+        .map(v => '"' + String(v).replace(/"/g, '""') + '"').join(',');
+      csv += row + '\n';
+    }
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'labtrace-review-queue.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+
+  document.getElementById('btnReport').addEventListener('click', generateReport);
+  document.getElementById('btnReportBack').addEventListener('click', () => navigate('dashboard'));
+  document.getElementById('btnReportCsv').addEventListener('click', () => document.getElementById('btnExport').click());
+
+  document.getElementById('btnDlTemplate').addEventListener('click', () => {
+    const t = 'event_id,timestamp,account,computer,event,department_case\n1,2026-10-09 09:00:00,example.user,PC-01,SUCCESS,CSE\n';
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([t], { type: 'text/csv' }));
+    a.download = 'labtrace-template.csv'; a.click();
+  });
+  document.getElementById('btnDlSample').addEventListener('click', () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([SAMPLE_CSV], { type: 'text/csv' }));
+    a.download = 'labtrace-sample.csv'; a.click();
+  });
+
+  document.getElementById('replayPause').addEventListener('click', () => {
+    if (!replayPaused) { replayPaused = true; replayPauseAt = Date.now(); document.getElementById('replayPause').textContent = 'Resume'; }
+    else { replayPaused = false; replayPauseAccum += Date.now() - replayPauseAt; document.getElementById('replayPause').textContent = 'Pause'; }
+  });
+  document.getElementById('replaySkip').addEventListener('click', stopReplay);
+
+  syncDayChips();
+});
+</script>
 </body>
 </html>
