@@ -7,7 +7,7 @@
   "scripts": {
     "start": "node server.js",
     "feeder": "node collectors/test-feeder.js",
-    "test": "echo \"Ready\""
+    "test": "node test.js"
   },
   "dependencies": {
     "cors": "^2.8.6",

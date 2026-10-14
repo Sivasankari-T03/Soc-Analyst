@@ -68,6 +68,22 @@ export const authService = {
     return sessionData;
   },
 
+  demoLogin() {
+    const token = randomBytes(32).toString('hex');
+    const sessionData = {
+      token,
+      username: 'demo.supervisor',
+      role: 'Supervisor',
+      name: 'Supervisor (Demo Mode)',
+      isDemo: true,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + SESSION_TTL_MS
+    };
+
+    sessions.set(token, sessionData);
+    return sessionData;
+  },
+
   validateSession(token) {
     if (!token) return null;
     const session = sessions.get(token);
